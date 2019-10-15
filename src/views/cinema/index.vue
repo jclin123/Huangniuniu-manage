@@ -33,7 +33,7 @@
                     size="mini"
                     @click="cnmviedeos(scope.row.id,scope.row.cinemaName)">影片库</el-button>
                     <el-button type="primary" size="mini" @click="handleAddMovie('addMovie_dialogFormVisible',scope.row.id,scope.row.cinemaName)">添加影片</el-button>
-                    <el-button type="primary" @click="handleEdit(scope.row.id)" size="mini" >编辑</el-button>
+                    <el-button type="primary" @click="handleEdit(scope.row)" size="mini" >编辑</el-button>
                     <el-button
                     size="mini"
                     type="danger"
@@ -60,7 +60,7 @@
             <el-form
                     :rules="rules"
                     ref="editForm"
-                    label-width="100px"
+                    label-width="180px"
                     label-position="right"
                     style="width: 500px;"
                     :model="cinema">
@@ -424,7 +424,7 @@ export default {
         },
         
         // 打开编辑窗口
-        handleEdit(id) {
+        handleEdit(row) {
             const that = this;
             //清除数据
             that.cinema = {}
@@ -436,8 +436,8 @@ export default {
              this.$http.get("/city/list").then(({data})=>{
                  that.CityOptions = data
                })
-            //查询该电影院信息
-            this.$http.get("/cinema/id/"+id).then(({data})=>{
+            //查询该电影院信息,传递id，发送请求
+            /*this.$http.get("/cinema/id/"+id).then(({data})=>{
                 that.cinema = data
                 //查询该电影院的城市名称
                 this.$http.get("/city/"+that.cinema.cityid).then(({data})=>{
@@ -448,6 +448,17 @@ export default {
                     that.cinema.cinemaAddress = that.cinema.cinemaAddress.replace(that.CityName,'')
                     //console.log(that.cinema.cinemaAddress)
                 })
+            })*/
+            //直接将row的数据赋值给cinema
+            this.cinema = row;
+            //查询该电影院的城市名称
+            this.$http.get("/city/"+that.cinema.cityid).then(({data})=>{
+                that.CityName = data.cityName
+                that.CityNameShow = data.cityName
+                //console.log(that.cinema)
+                //去除掉详细地址的城市名称
+                that.cinema.cinemaAddress = that.cinema.cinemaAddress.replace(that.CityName,'')
+                //console.log(that.cinema.cinemaAddress)
             })
 
             this.edit_dialogFormVisible = true

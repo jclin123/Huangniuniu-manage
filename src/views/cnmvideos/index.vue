@@ -182,7 +182,6 @@ export default {
       this.$refs[formName].validate(valid => {
         if (valid) {
           //提交表单
-          console.log("addData");
           //封装排场时间
           //this.skedule.showDate = new Date(this.skedule.showDate)
 

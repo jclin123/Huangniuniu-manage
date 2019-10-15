@@ -87,11 +87,11 @@
         <el-form-item label="演员姓名" prop="cardNum">
           <el-input v-model="pojo.cardNum"></el-input>
         </el-form-item>
-        <el-form-item label="上传头像" prop="address">
+        <el-form-item label="上传头像" prop="file">
           <!-- <el-input type="textarea" v-model="pojo.address" ></el-input> -->
           <el-upload
             class="upload-demo"
-            action="https://jsonplaceholder.typicode.com/posts/"
+            action="http://api.huangniuniu.com/api/upload/image"
             :limit="1"
             :on-preview="handlePreview"
             :on-remove="handleRemove"
