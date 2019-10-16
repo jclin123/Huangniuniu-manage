@@ -373,7 +373,7 @@ export default {
             this.$refs[formName].validate(valid => {
                 if(valid){
                     //提交表单
-                    console.log(this.CityName)
+                    //console.log(this.CityName)
                     //在详细地址前面加上城市名称
                     this.cinema.cinemaAddress = this.CityName + this.cinema.cinemaAddress;
                     this.$http({

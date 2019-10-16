@@ -2,30 +2,12 @@
   <div>
     <!-- :inline="true" 表单一行显示 -->
     <el-form ref="searchForm" :inline="true" :model="searchMap" style="margin-top: 20px">
-      <!-- 重置会看 el-form-item 组件元素的 prop 上是否指定了字段名，指定了才会重置生效 -->
-      <!-- <el-form-item prop="cardNum">
-                <el-input v-model="searchMap.cardNum" placeholder="会员卡号" style="width: 200px"></el-input>
-      </el-form-item>-->
-      <!-- <el-form-item prop="payType">
-                <el-select v-model="searchMap.payType" placeholder="请选择" style="width: 110px">
-                    //不要忘记 payTypeOptions 绑定到data中 
-                    <el-option v-for="option in payTypeOptions" 
-                    :key="option.type"
-                    :label="option.name"
-                    :value="option.type"
-                    ></el-option>
-                </el-select>
-      </el-form-item>-->
-      <el-form-item prop="name">
-        <el-input v-model="searchMap.name" placeholder="输入姓名搜索" style="width: 200px"></el-input>
+      <el-form-item prop="actorName">
+        <el-input v-model="searchMap.actorName" placeholder="输入姓名搜索" style="width: 200px"></el-input>
       </el-form-item>
-      <!-- <el-form-item prop="birthday">
-                //value-format 是指定绑定值的格式
-                <el-date-picker style="width: 200px" value-format="yyyy-MM-dd" v-model="searchMap.birthday"  type="date" placeholder="注册日期"> </el-date-picker>
-      </el-form-item>-->
 
       <el-form-item>
-        <el-button type="primary" @click="fetchData">查询</el-button>
+        <el-button type="primary" @click="clickquery">查询</el-button>
         <el-button type="primary" @click="handleAdd">新增</el-button>
         <el-button @click="resetForm('searchForm')">重置</el-button>
       </el-form-item>
@@ -34,28 +16,21 @@
         :data 绑定渲染的数据
         border 表格边框
     -->
-    <el-table :data="list" height="380" border style="width: 100%;text-align:center">
+    <el-table :data="list" height="500" border style="width: 100%;text-align:center">
       <!-- type="index"获取索引值，从1开始 ，label显示标题，prop 数据字段名，width列宽 -->
       <el-table-column type="index" label="序号" width="150"></el-table-column>
-      <el-table-column prop="cardNum" label="姓名"></el-table-column>
-      <el-table-column prop="name" label="头像">
-        <div class="demo-image__preview">
-          <el-image style="width: 100px; height: 100px" :src="url" :preview-src-list="srcList"></el-image>
-        </div>
+      <el-table-column prop="actorName" label="演员名称"></el-table-column>
+      <el-table-column  label="头像" >
+        <template slot-scope="scope">
+          <div class="demo-image__preview">
+            <el-image style="width: 100px; height: 100px" :src="scope.row.actorPicture"></el-image>
+          </div>
+        </template>
       </el-table-column>
-      <!-- <el-table-column prop="birthday" label="昵称" ></el-table-column>
-            <el-table-column prop="phone" label="身份类型" ></el-table-column>
-      <el-table-column prop="integral" label="注册时间" ></el-table-column>-->
-      <!-- <el-table-column prop="money" label="开卡金额" ></el-table-column>
-            <el-table-column prop="payType" label="支付类型" >
-                <template slot-scope="scope">
-                    <span>{{scope.row.payType | payTypeFilter}}</span>
-                </template>
-            </el-table-column>
-      <el-table-column prop="address" label="会员地址" ></el-table-column>-->
+
       <el-table-column label="操作">
         <template slot-scope="scope">
-          <el-button size="mini" @click="handleEdit(scope.row.id)">编辑</el-button>
+          <el-button size="mini" @click="handleEdit(scope.row)">编辑</el-button>
           <el-button size="mini" type="danger" @click="handleDelete(scope.row.id)">删除</el-button>
         </template>
       </el-table-column>
@@ -64,9 +39,9 @@
     <el-pagination
       @size-change="handleSizeChange"
       @current-change="handleCurrentChange"
-      :current-page="currentPage"
+      :current-page="page"
       :page-sizes="[10, 20, 50]"
-      :page-size="pageSize"
+      :page-size="rows"
       layout="total, sizes, prev, pager, next, jumper"
       :total="total"
     ></el-pagination>
@@ -75,17 +50,17 @@
         title 窗口的标题
         :visible.sync 当它true的时候，窗口会被弹出
     -->
-    <el-dialog title="演员编辑" :visible.sync="dialogFormVisible" width="500px">
+    <el-dialog :title="dailogTitleType" :visible.sync="dialogFormVisible" width="500px">
       <el-form
+        ref="actorForm"
         :rules="rules"
-        ref="pojoForm"
         label-width="100px"
         label-position="right"
         style="width: 400px;"
-        :model="pojo"
+        :model="actor"
       >
-        <el-form-item label="演员姓名" prop="cardNum">
-          <el-input v-model="pojo.cardNum"></el-input>
+        <el-form-item label="演员姓名" prop="actorName">
+          <el-input v-model="actor.actorName"></el-input>
         </el-form-item>
         <el-form-item label="上传头像" prop="file">
           <!-- <el-input type="textarea" v-model="pojo.address" ></el-input> -->
@@ -95,11 +70,15 @@
             :limit="1"
             :on-preview="handlePreview"
             :on-remove="handleRemove"
+            :on-change="fileChange"
+            :on-success="successfun"
             :file-list="fileList"
+            ref="nowUpload"
+
             list-type="picture"
           >
             <el-button size="small" type="primary">点击上传</el-button>
-            <div slot="tip" class="el-upload__tip">只能上传jpg/png文件，且不超过500kb</div>
+            <div slot="tip" class="el-upload__tip">只能上传jpg/png文件，且不超过10M</div>
           </el-upload>
         </el-form-item>
       </el-form>
@@ -108,7 +87,7 @@
         <!-- <el-button type="primary" @click="addData('pojoForm')">确 定</el-button> -->
         <el-button
           type="primary"
-          @click="pojo.id === null ? addData('pojoForm'): updateData('pojoForm')"
+          @click="actor.id == null ? addData('actorForm'): updateData('actorForm')"
         >确 定</el-button>
       </div>
     </el-dialog>
@@ -116,57 +95,34 @@
 </template>
 
 <script>
-import memberApi from "@/api/member";
-
-// 支付类型
-const payTypeOptions = [
-  { type: "1", name: "账号" },
-  { type: "2", name: "昵称" },
-  { type: "3", name: "身份类型" },
-  { type: "4", name: "注册时间" }
-];
 
 export default {
   data() {
     return {
       fileList:[],
-      url:
-        "https://fuss10.elemecdn.com/e/5d/4a731a90594a4af544c0c25941171jpeg.jpeg",
-      srcList: [
-        "https://fuss10.elemecdn.com/e/5d/4a731a90594a4af544c0c25941171jpeg.jpeg"
-      ],
+
       list: [],
       total: 0, // 总记录数
-      currentPage: 1, // 当前页码
-      pageSize: 20, // 每页显示10条数据,
+      page: 1, // 当前页码
+      rows: 10, // 每页显示10条数据,
       searchMap: {
         // 条件查询绑定的条件值
-        cardNum: "",
-        name: "",
-        payType: "",
-        birthday: ""
+        actorName: ''
       },
-      payTypeOptions, // payTypeOptions: payTypeOptions
       dialogFormVisible: false, //控制对话框
-      pojo: {
+      dailogTitleType: '',//弹框标题
+      actor: {
         id: null,
-        cardNum: "",
-        name: "",
-        birthday: "",
-        phone: "",
-        money: 0,
-        integral: 0,
-        payType: "",
-        address: ""
+        actorName: '',
+        actorPicture: ''
       }, // 提交的数据
-      rules: {
-        // 校验规则
-        cardNum: [{ required: true, message: "卡号不能为空", trigger: "blur" }],
-        name: [{ required: true, message: "姓名不能为空", trigger: "blur" }],
-        payType: [
-          { required: true, message: "支付类型不能为空", trigger: "change" }
+
+      rules: { // 校验演员规则
+        actorName: [
+          {required: true, message: '演员名称不能为空', trigger: 'blur'}
         ]
-      }
+
+      },
     };
   },
 
@@ -176,35 +132,95 @@ export default {
   },
 
   methods: {
+    successfun(response, file, fileList){
+        //this.actor.actorPicture = response;
+      //console.log(file)
+       this.fileList.push({'url':file.response});
+    },
+
+    //图片参数设置
+    fileChange(file) {
+      const typeArr = ["image/png", "image/jpeg", "image/jpg"];
+      const isJPG = typeArr.indexOf(file.raw.type) !== -1;//-1时候代表false
+      // image/png, image/jpeg, image/gif, image/jpg
+      const isLt10M = file.size / 1024 / 1024 < 10;//图片必须少于10M
+
+      if (!isJPG) {
+        this.$message.error("只能是图片!");
+        this.$refs.nowUpload.clearFiles();
+        this.files = null;
+        return;
+      }
+      if (!isLt10M) {
+        this.$message.error("上传图片大小不能超过 10MB!");
+        this.$refs.nowUpload.clearFiles();
+        this.files = null;
+        return;
+      }
+      this.files = file.raw;
+      /*console.log("this.files"+JSON.stringify(this.files));
+      console.log(file);*/
+    },
+
+
     handlePreview(){
 
     },
-    handleRemove(){
-
+    handleRemove(file, fileList){
+      //this.actor.actorPicture = '';
+      this.fileList = []
     },
     // 当每页显示条数改变后,被触发 , val是最新的每页显示条数
     handleSizeChange(val) {
       // console.log(val)
-      this.pageSize = val;
-      this.fetchData();
+      this.rows = val;
+      this.conditionquery();
     },
     // 当页码改变后,被触发 , val 是最新的页面
     handleCurrentChange(val) {
       // console.log(val)
-      this.currentPage = val;
-      this.fetchData();
+      this.page = val;
+      this.conditionquery();
     },
     fetchData() {
-      // memberApi.getList().then(response => {
       // 调用分页查询数据
-      memberApi
-        .search(this.currentPage, this.pageSize, this.searchMap)
-        .then(response => {
-          const resp = response.data;
-          // console.log(resp.data.rows)
-          this.list = resp.data.rows;
-          this.total = resp.data.total;
-        });
+      const that = this;
+      this.$http.get("/movie/getActorByCondition",{
+        params: {
+          rows: this.rows,
+          page: this.page
+        }
+      }).then(({data})=>{
+        that.list = data.items;
+        that.total = data.total;
+      }).catch(()=>{
+        that.list = [];
+        that.total = 0;
+      })
+    },
+
+    //点击查询
+    clickquery(){
+      this.page = 1;//初始化从第一页开始
+      this.conditionquery();
+    },
+
+    //条件查询用户信息
+    conditionquery(){
+      const that = this;
+      this.$http.get("/movie/getActorByCondition",{
+        params: {
+          actorName: this.searchMap.actorName,
+          rows: this.rows,
+          page: this.page
+        }
+      }).then(({data})=>{
+        that.list = data.items;
+        that.total = data.total;
+      }).catch(()=>{
+        that.list = [];
+        that.total = 0;
+      })
     },
 
     //重置
@@ -215,24 +231,31 @@ export default {
     },
     // 提交新增数据
     addData(formName) {
+      const that = this;
       this.$refs[formName].validate(valid => {
         if (valid) {
+          //封装图片路径
+          this.actor.actorPicture = this.fileList[0].url;
           //提交表单
-          console.log("addData");
-          memberApi.add(this.pojo).then(response => {
-            const resp = response.data;
-            if (resp.flag) {
-              //新增成功，刷新列表数据
-              this.fetchData();
-              this.dialogFormVisible = false; // 关闭窗口
-            } else {
-              // 失败，来点提示信息
-              this.$message({
-                message: resp.message,
-                type: "warning"
-              });
-            }
-          });
+          this.$http({
+            method:  'post',
+            url: '/movie/insertActor',
+            data:this.$qs.stringify(this.actor)
+          }).then(({data})=>{
+            //新增成功，刷新列表数据
+            that.fetchData()
+            //that.add_dialogFormVisible = false // 关闭窗口
+            that.dialogFormVisible = false
+            that.$message({
+              message: '添加成功',
+              type: 'success'
+            })
+          }).catch(()=>{
+            that.$message({
+              message: '添加失败',
+              type: 'warning'
+            })
+          })
         } else {
           return false;
         }
@@ -240,93 +263,81 @@ export default {
     },
     // 弹出新增窗口
     handleAdd() {
-      console.log(this.pojo);
-      // this.pojo = {}
+      //初始化数据
+      this.actor = {};
+      this.fileList = [];
       this.dialogFormVisible = true;
-      this.$nextTick(() => {
-        // this.$nextTick()它是一个异步事件，当渲染结束 之后 ，它的回调函数才会被执行
-        // 弹出窗口打开之后 ，需要加载Dom, 就需要花费一点时间，我们就应该等待它加载完dom之后，再进行调用resetFields方法，重置表单和清除样式
-        this.$refs["pojoForm"].resetFields();
-      });
+      this.dailogTitleType = '添加电影院'
     },
 
     // 打开编辑窗口
-    handleEdit(id) {
-      console.log("编辑", id);
-      this.handleAdd();
-      memberApi.getById(id).then(response => {
-        const resp = response.data;
-        if (resp.flag) {
-          this.pojo = resp.data;
-          console.log(this.pojo);
-        }
-      });
+    handleEdit(row) {
+      //初始化数据
+      this.fileList = [];
+      this.actor = {};
+      this.dialogFormVisible = true;
+      this.dailogTitleType = '编辑电影院'
+      //回显数据
+      this.fileList.push({'url' : row.actorPicture})
+      this.actor = row
     },
 
     updateData(formName) {
-      console.log("updateData");
+      const that = this;
       this.$refs[formName].validate(valid => {
         if (valid) {
-          // 提交更新
-          memberApi.update(this.pojo).then(response => {
-            const resp = response.data;
-            if (resp.flag) {
-              // 刷新列表
-              this.fetchData();
-              this.dialogFormVisible = false;
-            } else {
-              this.$message({
-                message: resp.message,
-                type: "warning"
-              });
-            }
-          });
+          //封装图片路径
+          this.actor.actorPicture = this.fileList[0].url;
+          this.$http({
+            method:  'put',
+            url: '/movie/updateActor',
+            data:this.$qs.stringify(this.actor)
+          }).then(({data})=>{
+            //新增成功，刷新列表数据
+            that.fetchData()
+            that.dialogFormVisible = false // 关闭窗口
+            that.$message({
+              message: '修改成功',
+              type: 'success'
+            })
+          }).catch(()=>{
+            that.$message({
+              message: '修改失败',
+              type: 'warning'
+            })
+          })
         } else {
           return false;
         }
       });
     },
-    // 删除会员
+    // 删除演员
     handleDelete(id) {
-      console.log("删除", id);
-      this.$confirm("确认删除这条记录吗？", "提示", {
-        confirmButtonText: "确认",
-        cancelButtonText: "取消"
-      })
-        .then(() => {
-          // 确认
-          console.log("确认");
-          memberApi.deleteById(id).then(response => {
-            // console.log(response)
-            const resp = response.data;
-
-            this.$message({
-              message: resp.message,
-              type: resp.flag ? "success" : "error"
-            });
-
-            if (resp.flag) {
-              // 删除成功，刷新列表数据
-              this.fetchData();
-            }
-          });
+      const that = this;
+      this.$confirm('确认删除这条记录吗？', '提示', {
+        confirmButtonText: '确认',
+        cancelButtonText: '取消',
+      }).then(() => {
+        this.$http.delete('/movie/deleteActor/'+id)
+                .then(()=>{
+                  that.fetchData()
+                  this.$message({
+                    message: '删除成功',
+                    type:  'success'
+                  })
+                }).catch(()=>{
+          this.$message({
+            message: '删除失败',
+            type:  'error'
+          })
         })
-        .catch(() => {
-          // 取消，不用理会
-          console.log("取消");
-        });
+      }).catch(() => {
+        // 取消，不用理会
+        console.log('取消')
+      })
     }
   },
 
-  filters: {
-    payTypeFilter(type) {
-      /* payTypeOptions.find(obj => {
-                return obj.type === type
-            }) */
-      // 在过滤 器当中不能引用当前实例 this   this.payTypeOptions 错误的
-      const payObj = payTypeOptions.find(obj => obj.type === type);
-      return payObj ? payObj.name : null;
-    }
-  }
+
 };
 </script>
