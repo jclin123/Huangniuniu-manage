@@ -12,7 +12,7 @@
                 <el-input v-model="searchMap.commentWords" placeholder="输入评论内容搜索" style="width: 200px"></el-input>
             </el-form-item>
             <el-form-item>
-                <el-button type="primary" @click="conditionquery" >查询</el-button>
+                <el-button type="primary" @click="checkquery" >查询</el-button>
                 <!-- <el-button type="primary" @click="handleAdd" >新增</el-button> -->
                 <el-button  @click="resetForm('searchForm')" >重置</el-button>
             </el-form-item>
@@ -169,6 +169,10 @@
                     that.total = 0;
                 })
             },
+            checkquery(){
+              this.pageNumber = 1;
+              this.conditionquery();
+            },
             conditionquery(){
                 const that = this;
                 this.$http.get("/comment/Commentstopage",{
@@ -200,6 +204,7 @@
                 this.$http.get("/comment/comment/"+id).then(({data})=>{
                     console.log(data.movieName)
                     that.comment = data
+                    that.comment.commentTime = that.dateFormat(data)
                     console.log(that.movieName+"66666")
                 })
                 this.dialogFormVisible = true
