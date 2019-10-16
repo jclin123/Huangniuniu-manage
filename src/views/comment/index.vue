@@ -31,7 +31,7 @@
             <el-table-column prop="movieName" label="电影名称" ></el-table-column>
             <el-table-column prop="nickname" label="用户昵称" ></el-table-column>
             <el-table-column prop="score" label="评分" width="90"></el-table-column>
-            <el-table-column prop="commentTime" label="评论时间" ></el-table-column>
+            <el-table-column prop="commentTime" label="评论时间" :formatter="dateFormat"></el-table-column>
             <!-- <el-table-column prop="money" label="开卡金额" ></el-table-column>
             <el-table-column prop="payType" label="支付类型" >
                 <template slot-scope="scope">
@@ -136,6 +136,12 @@
         },
 
         methods: {
+            //时间格式化
+            dateFormat(row){
+                let t=new Date(row.commentTime);//row 表示一行数据, updateTime 表示要格式化的字段名称
+                return t.getFullYear()+"-"+(t.getMonth()+1)+"-"+t.getDate()+" "+t.getHours()+":"+t.getMinutes();
+            },
+
             // 当每页显示条数改变后,被触发 , val是最新的每页显示条数
             handleSizeChange(val) {
                 // console.log(val)
@@ -190,6 +196,7 @@
             handleEdit(id){
                 console.log(id)
                 const that = this;
+                //格式化评论时间
                 this.$http.get("/comment/comment/"+id).then(({data})=>{
                     console.log(data.movieName)
                     that.comment = data
