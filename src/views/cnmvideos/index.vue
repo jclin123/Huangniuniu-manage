@@ -109,13 +109,14 @@ export default {
       //添加排场校验
       rulesskedule: {
         roomName: [
-          {required: true, message: '电影厅名称不能为空', trigger: 'blur'}
+          {required: true, message: '电影厅名称不能为空', trigger: 'blur'},
+          {min: 2, max: 20, message: '长度在 2 到 10 个字符'}
         ],
         price: [
-          {required: true, message: '价格必须填写', trigger: 'blur'}
+          {required: true, message: '价格必须正确填写', trigger: 'blur',type: 'number'}
         ],
         ticketsLeft: [
-          {required: true, message: '电影票数必须填写', trigger: 'blur'}
+          {required: true, message: '电影票数必须正确填写', trigger: 'blur',type: 'number'}
         ],
       }
     };

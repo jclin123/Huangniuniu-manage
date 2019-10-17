@@ -181,13 +181,15 @@ export default {
             },
             rules: { // 校验电影院规则
                 cinemaName: [
-                    {required: true, message: '电影院名称不能为空', trigger: 'blur'}
+                    {required: true, message: '电影院名称不能为空', trigger: 'blur'},
+                    {min: 2, max: 20, message: '长度在 2 到 20 个字符'}
                 ],
                 cityid: [
                     {required: true, message: '请选择所在城市', trigger: 'change'}
                 ],
                 cinemaAddress: [
-                    {required: true, message: '详细地址不能为空', trigger: 'blur'}
+                    {required: true, message: '详细地址不能为空', trigger: 'blur'},
+                    {min: 2, max: 20, message: '长度在 2 到 100 个字符'}
                 ]
             },
             rulesMovie: {//校验电影规则

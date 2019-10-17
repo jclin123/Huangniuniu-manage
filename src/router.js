@@ -3,10 +3,6 @@ import Router from "vue-router";
 import Login from './views/login'
 import Layout from '@/components/Layout.vue'
 import Home from './views/home'
-import Member from './views/member'
-import Supplier from './views/supplier'
-import Goods from './views/goods'
-import Staff from './views/staff'
 import Usermanager from './views/usermanager'
 import Actor from './views/actor'
 import City from './views/city'
@@ -93,26 +89,7 @@ export default new Router({
           component: Comment,
           meta: { title: '评论管理' }
         },
-        {
-          path: '/member', 
-          component: Member,
-          meta: { title: '会员管理' }
-        },
-        {
-          path: '/supplier',
-          component: Supplier,
-          meta: { title: '供应商管理' }
-        },
-        {
-          path: '/goods',
-          component: Goods,
-          meta: { title: '商品管理' }
-        },
-        {
-          path: '/staff',
-          component: Staff,
-          meta: { title: '员工管理' }
-        }
+
       ]
     }
   ]

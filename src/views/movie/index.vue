@@ -35,7 +35,7 @@
         <template slot-scope="scope">
           <el-button size="mini" @click="cnmviedeos(scope.row.id,scope.row.movieName)">影片演员</el-button>
           <el-button type="primary" size="mini" @click="handleAddmovieactor(scope.row.id,scope.row.movieName)">添加演员</el-button>
-          <el-button type="primary" @click="handleEdit(scope.row.id,'dialogFormVisible','pojoForm')" size="mini" >详情</el-button>
+          <el-button type="primary" @click="handledetail(scope.row)" size="mini" >详情</el-button>
           <el-button size="mini" type="danger" @click="handleDelete(scope.row.id)">删除</el-button>
         </template>
       </el-table-column>
@@ -44,9 +44,9 @@
     <el-pagination
       @size-change="handleSizeChange"
       @current-change="handleCurrentChange"
-      :current-page="rows"
+      :current-page="pageNumber"
       :page-sizes="[10, 20, 50]"
-      :page-size="page"
+      :page-size="pageSize"
       layout="total, sizes, prev, pager, next, jumper"
       :total="total"
     ></el-pagination>
@@ -55,12 +55,13 @@
         title 窗口的标题
         :visible.sync 当它true的时候，窗口会被弹出
     -->
-    <el-dialog title="电影" :visible.sync="dialogFormVisible" width="500px">
+    <el-dialog title="电影" :visible.sync="dialogFormVisible" width="700px">
       <el-form
-        ref="pojoForm"
-        label-width="100px"
+        :rules="rules"
+        ref="movieForm"
+        label-width="150px"
         label-position="right"
-        style="width: 400px;"
+        style="width: 550px;"
         :model="movie"
       >
         <el-form-item label="电影名称" prop="movieName">
@@ -73,42 +74,89 @@
           <el-input v-model="movie.location"></el-input>
         </el-form-item>
         <el-form-item label="电影简介" prop="discription">
-          <el-input type="textarea" v-model="movie.discription"></el-input>
+          <el-input type="textarea" :rows="6" v-model="movie.discription"></el-input>
         </el-form-item>
         <el-form-item label="电影海报" prop="file">
           <el-upload
-            class="upload-demo"
-            action="http://api.huangniuniu.com/api/upload/image"
-            list-type="picture"
+                  class="upload-demo"
+                  action="http://api.huangniuniu.com/api/upload/image"
+                  :limit="1"
+                  :on-preview="handlePreview"
+                  :on-remove="handleRemove1"
+                  :on-change="fileChange"
+                  :on-success="successfun1"
+                  :file-list="fileList1"
+                  ref="nowUpload"
+                  list-type="picture"
           >
             <el-button size="small" type="primary">点击上传</el-button>
             <div slot="tip" class="el-upload__tip">只能上传jpg/png文件，且不超过10M</div>
           </el-upload>
         </el-form-item>
-        <el-form-item label="电影时长" prop="runningTime">
+        <el-form-item label="电影时长(单位:分钟)" prop="runningTime">
           <el-input v-model="movie.runningTime"></el-input>
         </el-form-item>
         <el-form-item label="上映时间" prop="releaseTime">
-          <el-input v-model="movie.releaseTime"></el-input>
+          <el-date-picker
+                  style="width: 200px"
+                  value-format="yyyy-MM-dd"
+                  v-model="movie.releaseTime"
+                  type="date"
+                  placeholder="请选择"
+          ></el-date-picker>
         </el-form-item>
         <el-form-item label="剧照" prop="file">
           <!-- <el-input v-model="pojo.name"></el-input> -->
           <el-upload
-            class="upload-demo"
-            action="https://jsonplaceholder.typicode.com/posts/"
-            list-type="picture"
+                  class="upload-demo"
+                  action="http://api.huangniuniu.com/api/upload/image"
+                  :on-preview="handlePreview"
+                  :on-remove="handleRemove2"
+                  :on-change="fileChange"
+                  :on-success="successfun2"
+                  :file-list="fileList2"
+                  ref="nowUpload"
+                  list-type="picture"
           >
             <el-button size="small" type="primary">点击上传</el-button>
             <div slot="tip" class="el-upload__tip">只能上传jpg/png文件，且不超过10M</div>
           </el-upload>
         </el-form-item>
-        <el-form-item label="预告片" prop="prevideo">
-          <el-input v-model="movie.prevideo"></el-input>
+        <el-form-item label="预告片" prop="file" class="video-upload">
+          <!-- action必选参数, 上传的地址 -->
+          <el-upload class="avatar-uploader el-upload--text"
+                     action="http://api.huangniuniu.com/api/upload/image"
+                     :show-file-list="false"
+                     :on-success="handleVideoSuccess"
+                     :before-upload="beforeUploadVideo"
+                     accept='.mp4,.ogg,.flv,.avi'
+                     >
+            <video
+                    v-if="movie.prevideo !='' && videoFlag == false"
+                    :src="movie.prevideo"
+                    width="200"
+                    height="180"
+                    controls="controls"
+            >您的浏览器不支持视频播放</video>    <!--视频上传成功之后显示-->
+            <i
+                    v-else-if="movie.prevideo =='' && videoFlag == false"
+                    class="el-icon-plus avatar-uploader-icon"
+            ></i>            <!--没选择视频之前显示-->
+            <el-progress
+                    v-if="videoFlag == true"
+                    type="circle"
+                    :percentage="videoUploadPercent"
+                    style="margin-top:30px"
+            ></el-progress>    <!--如果视频正在上传的时候显示-->
+            <el-button class="video-btn"
+                       slot="trigger"
+                       size="small"
+                       v-if="!isShowUploadVideo"
+                       type="primary">选取文件</el-button>
+          </el-upload>
+          <P class="text">请保证视频格式正确，且不超过10M</P>
         </el-form-item>
 
-        <el-form-item label="评分" prop="score">
-          <el-input v-model="movie.score"></el-input>
-        </el-form-item>
         <el-form-item label="下架时间" prop="soldOutTime">
           <!-- value-format 是指定绑定值的格式 -->
           <el-date-picker
@@ -125,25 +173,89 @@
         <!-- <el-button type="primary" @click="addData('pojoForm')">确 定</el-button> -->
         <el-button
           type="primary"
-          @click="movie.id === null ? addData('pojoForm'): updateData('pojoForm')"
+          @click="addmovie('movieForm')"
         >确 定</el-button>
       </div>
     </el-dialog>
 
-    <!-- 为某电影院添加电影弹窗 -->
+    <!--电影详情-->
+    <el-dialog title="电影" :visible.sync="dialogdetail" width="700px">
+      <el-form
+              ref="movieForm"
+              label-width="150px"
+              label-position="right"
+              style="width: 550px;"
+              :model="movie"
+      >
+    <el-form-item label="电影名称" prop="movieName">
+      <el-input v-model="movie.movieName" readonly="true"></el-input>
+    </el-form-item>
+    <el-form-item label="电影类型" prop="movieType">
+      <el-input v-model="movie.movieType" readonly="true"></el-input>
+    </el-form-item>
+    <el-form-item label="影片产地" prop="location">
+      <el-input v-model="movie.location" readonly="true"></el-input>
+    </el-form-item>
+    <el-form-item label="电影简介" prop="discription">
+      <el-input type="textarea" :rows="6" v-model="movie.discription" readonly="true"></el-input>
+    </el-form-item>
+    <el-form-item label="电影海报" prop="file">
+      <el-upload
+              class="upload-demo"
+              :limit="1"
+              :file-list="fileList1"
+              ref="nowUpload"
+              list-type="picture"
+              :disabled="true"
+      >
+      </el-upload>
+    </el-form-item>
+    <el-form-item label="电影时长(单位:分钟)" prop="runningTime">
+      <el-input v-model="movie.runningTime" readonly="true"></el-input>
+    </el-form-item>
+    <el-form-item label="上映时间" prop="releaseTime">
+      <el-input v-model="movie.releaseTime" readonly="true"></el-input>
+    </el-form-item>
+    <el-form-item label="剧照" prop="file">
+      <!-- <el-input v-model="pojo.name"></el-input> -->
+      <el-upload
+              class="upload-demo"
+              :file-list="fileList2"
+              ref="nowUpload"
+              list-type="picture"
+              :disabled="true"
+      >
+      </el-upload>
+    </el-form-item>
+    <el-form-item label="预告片" prop="file" class="video-upload">
+      <!-- action必选参数, 上传的地址 -->
+      <video :src="movie.prevideo" controls="controls" style="width: 200px">
+      </video>
+    </el-form-item>
+
+        <el-form-item label="下架时间" prop="releaseTime">
+          <el-input v-model="movie.soldOutTime" readonly="true"></el-input>
+        </el-form-item>
+    </el-form>
+    <div slot="footer" class="dialog-footer">
+      <el-button @click="dialogdetail = false">关闭</el-button>
+      <!-- <el-button type="primary" @click="addData('pojoForm')">确 定</el-button> -->
+    </div>
+    </el-dialog>
+
+    <!-- 为某电影院添加演员弹窗 -->
     <el-dialog title="添加演员" :visible.sync="movieActordlogFormVsb" width="500px">
       <el-form
-        :rules="rules"
         ref="movieActorForm"
         label-width="100px"
         label-position="right"
         style="width: 400px;"
         :model="movie_actor"
       >
-        <el-form-item label="影片名" prop="cardNum">
+        <el-form-item label="影片名" prop="movieName">
           <el-input v-model="movie_actor.movieName" :disabled="true"></el-input>
         </el-form-item>
-        <el-form-item label="演员名" prop="name">
+        <el-form-item label="演员名" prop="actorName">
           <el-select
                   v-model="movie_actor.actorid"
                   @change="select_handler_actor"
@@ -178,16 +290,18 @@
 </template>
 
 <script>
-import memberApi from "@/api/member";
 
 import Vue from 'vue'
 export default {
   data() {
     return {
+      dialogdetail: false,//电影详情弹框
+      fileList1: [],//电影海报，取第一个
+      fileList2: [],//电影剧照，多个图片
       list: [],
       total: 0, // 总记录数
-      page: 1, // 当前页码
-      rows: 10, // 每页显示10条数据,
+      pageNumber: 1, // 当前页码
+      pageSize: 10, // 每页显示10条数据,
       searchMap: {
         // 条件查询绑定的条件值
         movieName: "",
@@ -220,16 +334,143 @@ export default {
         movieid: null,
         actorName: '',
         movieName: ''
-      }
+      },
+      videoFlag: false,
+      videoUploadPercent: 0,
+      isShowUploadVideo: false, //显示上传按钮
+
+      rules: { // 校验电影规则
+        movieName: [
+          {required: true, message: '电影名称不能为空', trigger: 'blur'},
+          {min: 2, max: 20, message: '长度在 2 到 20 个字符'}
+        ],
+        movieType: [
+          {required: true, message: '请填写电影类型', trigger: 'blur'},
+          {min: 2, max: 20, message: '长度在 2 到 20 个字符'}
+        ],
+        location: [
+          {required: true, message: '请填写电影产地', trigger: 'blur'},
+          {min: 2, max: 20, message: '长度在 2 到 20 个字符'}
+        ],
+        discription: [
+          {required: true, message: '电影简介不能为空', trigger: 'blur'},
+          {min: 2, max: 200, message: '长度在 2 到 200 个字符'}
+        ],
+        runningTime: [
+          {required: true, message: '请正确填写电影播放时长', trigger: 'blur',type: 'number'}
+        ]
+
+      },
     };
   },
 
   created() {
     // 初始化获取列表数据
-    this.fetchData();
+    this.conditionquery();
   },
 
   methods: {
+
+    //电影详情
+    handledetail(row){
+      this.movie = {};
+      this.movie = row;
+      this.fileList1 =[];
+      this.fileList2 = [];
+      this.fileList1.push({"url" : this.movie.moviePicture});
+      const files = this.movie.stagePhotos.split(",");
+      for(let i=0;i<files.length;i++){
+        this.fileList2.push({"url" : files[i]});
+      }
+      //this.fileList2.push() = this.movie.stagePhotos;
+      this.dialogdetail = true;
+    },
+
+    //图片上传成功，海报
+    successfun1(response, file, fileList){
+      this.fileList1.push({'url':file.response});
+    },
+    //剧照
+    successfun2(response, file, fileList){
+      //console.log(JSON.stringify(response))
+      //console.log("success"+JSON.stringify(file))
+      this.fileList2.push({'uid':file.uid , 'url':file.response});
+    },
+
+    //图片参数设置
+    fileChange(file) {
+      const typeArr = ["image/png", "image/jpeg", "image/jpg"];
+      const isJPG = typeArr.indexOf(file.raw.type) !== -1;//-1时候代表false
+      // image/png, image/jpeg, image/gif, image/jpg
+      const isLt10M = file.size / 1024 / 1024 < 10;//图片必须少于10M
+
+      if (!isJPG) {
+        this.$message.error("只能是图片!");
+        this.$refs.nowUpload.clearFiles();
+        this.files = null;
+        return;
+      }
+      if (!isLt10M) {
+        this.$message.error("上传图片大小不能超过 10MB!");
+        this.$refs.nowUpload.clearFiles();
+        this.files = null;
+        return;
+      }
+      this.files = file.raw;
+      /*console.log("this.files"+JSON.stringify(this.files));
+      console.log(file);*/
+    },
+
+    //视频设置
+    beforeUploadVideo(file) {
+      const isLt10M = file.size / 1024 / 1024  < 10;
+      if (['video/mp4', 'video/ogg', 'video/flv','video/avi','video/wmv','video/rmvb'].indexOf(file.type) == -1) {
+        this.$message.error('请上传正确的视频格式');
+        return false;
+      }
+      if (!isLt10M) {
+        this.$message.error('上传视频大小不能超过10MB哦!');
+        return false;
+      }
+    },
+
+    //视频上传进度显示：
+    uploadVideoProcess(event, file, fileList) {
+      this.videoFlag = true;
+      this.videoUploadPercent = parseInt(file.percentage);
+      //this.videoUploadPercent = file.percentage.toFixed(0);
+    },
+
+    //视频上传成功
+    handleVideoSuccess(res, file) {                               //获取上传图片地址
+      this.videoFlag = false;
+      this.videoUploadPercent = 0;
+      //console.log(res)
+      if(res.toString().startsWith("http")){
+        this.isShowUploadVideo = true
+        //this.videoForm.videoUploadId = res.data.uploadId;
+        this.movie.prevideo = res;
+        //console.log(res)
+      }else{
+        this.$message.error('视频上传失败，请重新上传！');
+      }
+    },
+
+    handlePreview(){
+
+    },
+    //删除海报
+    handleRemove1(file, fileList){
+      //this.actor.actorPicture = '';
+      this.fileList1 = []
+    },
+    //删除剧照
+    handleRemove2(file, fileList){
+      //this.actor.actorPicture = '';
+      //console.log("delete"+JSON.stringify(file))
+      this.fileList2.splice(this.fileList2.findIndex(item => item.uid === file.id), 1)
+    },
+
 
     //时间格式化
     dateFormat(row){
@@ -282,22 +523,22 @@ export default {
     // 当每页显示条数改变后,被触发 , val是最新的每页显示条数
     handleSizeChange(val) {
       // console.log(val)
-      this.page = val;
-      this.fetchData();
+      this.pageSize = val;
+      this.conditionquery();
     },
     // 当页码改变后,被触发 , val 是最新的页面
     handleCurrentChange(val) {
       // console.log(val)
-      this.rows = val;
-      this.fetchData();
+      this.pageNumber = val;
+      this.conditionquery();
     },
     fetchData() {
       // 调用分页查询数据
       const that = this;
       this.$http.get("/movie/list",{
         params: {
-          rows: this.rows,
-          page: this.page
+          rows: this.pageSize,
+          page: this.pageNumber
         }
       }).then(({data})=>{
         that.list = data.items;
@@ -310,7 +551,7 @@ export default {
 
     //点击查询
     clickquery(){
-      this.page = 1;//初始化从第一页开始
+      this.pageNumber = 1;//初始化从第一页开始
       this.conditionquery();
     },
 
@@ -322,8 +563,8 @@ export default {
           movieName: this.searchMap.movieName,
           movieType: this.searchMap.movieType,
           location: this.searchMap.location,
-          rows: this.rows,
-          page: this.page
+          rows: this.pageSize,
+          page: this.pageNumber
         }
       }).then(({data})=>{
         that.list = data.items;
@@ -340,35 +581,15 @@ export default {
       // 重置会看 el-form-item 组件元素的 prop 上是否指定了字段名，指定了才会重置生效
       this.$refs[formName].resetFields();
     },
-    // 提交新增数据
-    addData(formName) {
-      this.$refs[formName].validate(valid => {
-        if (valid) {
-          //提交表单
-          console.log("addData");
-          memberApi.add(this.pojo).then(response => {
-            const resp = response.data;
-            if (resp.flag) {
-              //新增成功，刷新列表数据
-              this.fetchData();
-              this.dialogFormVisible = false; // 关闭窗口
-            } else {
-              // 失败，来点提示信息
-              this.$message({
-                message: resp.message,
-                type: "warning"
-              });
-            }
-          });
-        } else {
-          return false;
-        }
-      });
-    },
+
     // 弹出新增电影窗口
     handleAdd() {
       this.movie = {}
       this.dialogFormVisible = true;
+
+      this.videoFlag=false;
+      this.videoUploadPercent=0;
+      this.isShowUploadVideo=false;
 
     },
     //弹出添加演员
@@ -390,7 +611,48 @@ export default {
             url: '/movie/addActorAndMovie',
             data:this.$qs.stringify(this.movie_actor)
           }).then(({data})=>{
-            that.movieActordlogFormVsb = false // 关闭窗口
+            //that.movieActordlogFormVsb = false // 关闭窗口
+            that.$message({
+              message: '添加演员成功',
+              type: 'success'
+            })
+          }).catch(()=>{
+            that.$message({
+              message: '添加演员失败',
+              type: 'warning'
+            })
+          })
+
+        }else {
+          return false
+        }
+      })
+    },
+
+    //添加电影
+    addmovie(formName){
+      const that = this;
+      this.$refs[formName].validate(valid => {
+        if(valid){
+          this.movie.moviePicture = ''
+          this.movie.stagePhotos = ''
+          //封装图片地址
+          this.movie.moviePicture = this.fileList1[0].url;//电影海报
+          for(let i = 0,flag=0; i<this.fileList2.length; i++){
+            ++flag;
+            if(this.fileList2.length != flag){
+              this.movie.stagePhotos = this.movie.stagePhotos + this.fileList2[i].url + ",";
+            }else{
+              this.movie.stagePhotos = this.movie.stagePhotos + this.fileList2[i].url;
+            }
+          }
+          console.log(this.movie.stagePhotos)
+          this.$http({
+            method:  'post',
+            url: '/movie/insert',
+            data:this.$qs.stringify(this.movie)
+          }).then(({data})=>{
+            that.dialogFormVisible = false // 关闭窗口
             that.$message({
               message: '添加演员成功',
               type: 'success'
@@ -409,43 +671,8 @@ export default {
     },
 
 
-    // 打开编辑窗口
-    handleEdit(id, dfs, formName) {
-      console.log("编辑", id);
-      this.handleAdd(dfs, formName);
-      memberApi.getById(id).then(response => {
-        const resp = response.data;
-        if (resp.flag) {
-          this.pojo = resp.data;
-          console.log(this.pojo);
-        }
-      });
-    },
 
-    updateData(formName) {
-      console.log("updateData");
-      this.$refs[formName].validate(valid => {
-        if (valid) {
-          // 提交更新
-          memberApi.update(this.pojo).then(response => {
-            const resp = response.data;
-            if (resp.flag) {
-              // 刷新列表
-              this.fetchData();
-              this.dialogFormVisible = false;
-            } else {
-              this.$message({
-                message: resp.message,
-                type: "warning"
-              });
-            }
-          });
-        } else {
-          return false;
-        }
-      });
-    },
-    // 删除会员
+    // 删除电影
     handleDelete(id) {
       const that = this
       this.$confirm("确认删除这条记录吗？", "提示", {

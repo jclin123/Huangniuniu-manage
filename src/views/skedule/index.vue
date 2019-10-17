@@ -65,8 +65,7 @@
 
         <!-- 为某电影院添加电影弹窗 -->
         <el-dialog title="排场编辑" :visible.sync="dlogFormVsb" width="500px">
-            <el-form 
-            :rules="rules"
+            <el-form
             ref="skeduleForm"
             label-width="100px"
             label-position="right"
