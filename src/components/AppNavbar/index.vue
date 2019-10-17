@@ -87,16 +87,6 @@
         </el-menu-item-group>
       </el-submenu>
 
-      <el-submenu index="/member/">
-        <template slot="title">
-          <i class="el-icon-location"></i>
-          <span>会员管理</span>
-        </template>
-        <el-menu-item-group>
-          <el-menu-item index="/member/"><span slot="title">会员管理</span></el-menu-item>
-        </el-menu-item-group>
-      </el-submenu>
-
     </el-menu>
   </el-col>
 </el-row>
