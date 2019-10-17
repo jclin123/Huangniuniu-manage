@@ -2,33 +2,41 @@
     <div>
         <!-- :inline="true" 表单一行显示 -->
         <el-form ref="searchForm" :inline="true" :model="searchMap" style="margin-top: 20px">
-            <el-form-item prop="name">
-                <el-input v-model="searchMap.name" placeholder="输入电影名搜索" style="width: 200px"></el-input>
+            <el-form-item prop="movieName">
+                <el-input v-model="searchMap.movieName" placeholder="输入电影名" style="width: 200px"></el-input>
             </el-form-item>
-            <el-form-item prop="name">
-                <el-input v-model="searchMap.name" placeholder="请输入影院名搜索" style="width: 200px"></el-input>
+            <el-form-item prop="cinemaName">
+                <el-input v-model="searchMap.cinemaName" placeholder="请输入影院名" style="width: 200px"></el-input>
+            </el-form-item>
+            <el-form-item prop="orderNum">
+                <el-input v-model="searchMap.orderNum" placeholder="请输入购票数量" style="width: 200px"></el-input>
             </el-form-item>
             <el-form-item>
-                <el-button type="primary" @click="fetchData" >查询</el-button>
+                <el-button type="primary" @click="clickquery" >查询</el-button>
                 <el-button  @click="resetForm('searchForm')" >重置</el-button>
             </el-form-item>
         </el-form>
+
         <!-- 数据列表
         :data 绑定渲染的数据
         border 表格边框
          -->
          <el-table
             :data="list"
-            height="380"
+            height="500"
             border
             style="width: 100%;text-align:center">
             <!-- type="index"获取索引值，从1开始 ，label显示标题，prop 数据字段名，width列宽 -->
             <el-table-column type="index" label="序号" width="60"></el-table-column>
-            <el-table-column prop="cardNum" label="影院名"></el-table-column>
-            <el-table-column prop="name" label="电影名"></el-table-column>
-            <el-table-column prop="cardNum" label="用户昵称"></el-table-column>
-            <el-table-column prop="name" label="订票数"></el-table-column>
-            <el-table-column prop="birthday" label="下单时间" ></el-table-column>
+             <el-table-column prop="id" label="订单号"></el-table-column>
+            <el-table-column prop="orderNum" label="购票数"></el-table-column>
+            <el-table-column prop="orderTime" label="下单时间" :formatter="timeFormat"></el-table-column>
+            <el-table-column prop="nickname" label="昵称" ></el-table-column>
+             <el-table-column prop="roomName" label="影厅名"></el-table-column>
+             <el-table-column prop="showDate" label="上映时间" :formatter="dateFormat"></el-table-column>
+             <el-table-column prop="cinemaName" label="影院名称"></el-table-column>
+             <el-table-column prop="movieName" label="电影名称"></el-table-column>
+             <el-table-column prop="totalPrice" label="总价" ></el-table-column>
              <el-table-column label="操作">
                 <template slot-scope="scope">
                     <el-button
@@ -38,81 +46,24 @@
                 </template>
              </el-table-column>
         </el-table>
+
         <!-- 分页组件 -->
         <el-pagination
-            @size-change="handleSizeChange"
-            @current-change="handleCurrentChange"
-            :current-page="currentPage"
-            :page-sizes="[10, 20, 50]"
-            :page-size="pageSize"
-            layout="total, sizes, prev, pager, next, jumper"
-            :total="total">
+                @size-change="handleSizeChange"
+                @current-change="handleCurrentChange"
+                :current-page="pageNumber"
+                :page-sizes="[10, 20, 50]"
+                :page-size="pageSize"
+                layout="total, sizes, prev, pager, next, jumper"
+                :total="total">
         </el-pagination>
 
-        <!-- 弹出新增窗口 
-        title 窗口的标题
-        :visible.sync 当它true的时候，窗口会被弹出
-        -->
-        <el-dialog title="会员编辑" :visible.sync="dialogFormVisible" width="500px">
-            <el-form 
-            :rules="rules"
-            ref="pojoForm"
-            label-width="100px"
-            label-position="right"
-            style="width: 400px;"
-            :model="pojo">
-                <el-form-item label="会员卡号" prop="cardNum" >
-                <el-input v-model="pojo.cardNum" ></el-input>
-                </el-form-item>
-                <el-form-item label="会员姓名" prop="name" >
-                <el-input v-model="pojo.name" ></el-input>
-                </el-form-item>
-                <el-form-item label="会员生日" prop="birthday" >
-                    <!-- value-format 是指定绑定值的格式 -->
-                    <el-date-picker style="width: 200px" value-format="yyyy-MM-dd" v-model="pojo.birthday"  type="date" placeholder="会员生日"> </el-date-picker>
-                </el-form-item>
-                <el-form-item label="手机号码" prop="phone" >
-                <el-input v-model="pojo.phone" ></el-input>
-                </el-form-item>
-                <el-form-item label="开卡金额" prop="money">
-                <el-input v-model="pojo.money" ></el-input>
-                </el-form-item>
-                <el-form-item label="可用积分" prop="integral">
-                <el-input v-model="pojo.integral" ></el-input>
-                </el-form-item>
-                <el-form-item label="支付类型" prop="payType" >
-                    <el-select v-model="pojo.payType" placeholder="支付类型" style="width: 110px">
-                        <!-- 不要忘记 payTypeOptions 绑定到data中 -->
-                        <el-option v-for="option in payTypeOptions" 
-                        :key="option.type"
-                        :label="option.name"
-                        :value="option.type"
-                        ></el-option>
-                    </el-select>
-                </el-form-item>
-                <el-form-item label="会员地址" prop="address">
-                    <el-input type="textarea" v-model="pojo.address" ></el-input>
-                </el-form-item>
-                
-            </el-form>
-            <div slot="footer" class="dialog-footer">
-                <el-button @click="dialogFormVisible = false">取 消</el-button>
-                <!-- <el-button type="primary" @click="addData('pojoForm')">确 定</el-button> -->
-                <el-button type="primary" @click="pojo.id === null ? addData('pojoForm'): updateData('pojoForm')">确 定</el-button>
-            </div>
-        </el-dialog>
     </div>
     
 </template>
 
 <script>
-import memberApi from '@/api/member'
 
-// 支付类型
-const payTypeOptions = [
-    {type: '1', name: '昵称'},
-    {type: '2', name: '下单时间'},
-]
 
 export default {
     
@@ -120,38 +71,16 @@ export default {
         return {
             list: [],
             total: 0, // 总记录数
-            currentPage: 1, // 当前页码 
-            pageSize: 20, // 每页显示10条数据,
+            pageNumber: 1, // 当前页码
+            pageSize: 10, // 每页显示10条数据,
             searchMap: { // 条件查询绑定的条件值
-                cardNum: '',
-                name: '',
-                payType: '',
-                birthday: ''
+                cinemaName: '',
+                movieName: '',
+                orderNum: ''
             }, 
-            payTypeOptions, // payTypeOptions: payTypeOptions
+
             dialogFormVisible: false, //控制对话框
-            pojo: {
-                id: null,
-                cardNum: '',
-                name: '',
-                birthday: '',
-                phone: '',
-                money: 0,
-                integral: 0,
-                payType: '',
-                address: ''
-            }, // 提交的数据
-            rules: { // 校验规则
-                cardNum: [
-                    {required: true, message: '卡号不能为空', trigger: 'blur'}
-                ],
-                name: [
-                    {required: true, message: '姓名不能为空', trigger: 'blur'}
-                ],
-                payType: [
-                    {required: true, message: '支付类型不能为空', trigger: 'change'}
-                ]
-            }
+
         }
     },
 
@@ -161,6 +90,15 @@ export default {
     },
 
     methods: {
+        //时间格式化
+        timeFormat(row){
+            let t=new Date(row.orderTime);//row 表示一行数据, updateTime 表示要格式化的字段名称
+            return t.getFullYear()+"-"+(t.getMonth()+1)+"-"+t.getDate()+" "+t.getHours()+":"+t.getMinutes();
+        },
+        dateFormat(row){
+            let t=new Date(row.showDate);//row 表示一行数据, updateTime 表示要格式化的字段名称
+            return t.getFullYear()+"-"+(t.getMonth()+1)+"-"+t.getDate();
+        },
         // 当每页显示条数改变后,被触发 , val是最新的每页显示条数
         handleSizeChange(val) {
             // console.log(val)
@@ -170,17 +108,31 @@ export default {
         // 当页码改变后,被触发 , val 是最新的页面
         handleCurrentChange(val) {
             // console.log(val)
-            this.currentPage = val
+            this.pageNumber = val
             this.fetchData()
         },
+        //点击查询
+        clickquery() {
+            this.pageNumber = 1;//初始化从第一页开始
+            this.fetchData();
+        },
         fetchData() {
-            // memberApi.getList().then(response => {
-            // 调用分页查询数据
-            memberApi.search(this.currentPage, this.pageSize, this.searchMap).then(response =>{
-                const resp = response.data
-                // console.log(resp.data.rows)
-                this.list = resp.data.rows
-                this.total = resp.data.total
+            const that = this;
+            this.$http.get("/order/getOrderMessageByCondition", {
+                params: {
+                    cinemaName: this.searchMap.cinemaName,
+                    orderNum: this.searchMap.orderNum,
+                    movieName: this.searchMap.movieName,
+                    pageSize: this.pageSize,
+                    pageNumber: this.pageNumber
+                }
+            }).then(({data}) => {
+                that.list = data.items;
+                that.total = data.total;
+                console.log(that.list)
+            }).catch(() => {
+                that.list = [];
+                that.total = 0;
             })
         },
         
@@ -190,103 +142,29 @@ export default {
             // 重置会看 el-form-item 组件元素的 prop 上是否指定了字段名，指定了才会重置生效
             this.$refs[formName].resetFields()
         },
-        // 提交新增数据
-        addData(formName) {
-            this.$refs[formName].validate(valid => {
-                if(valid){
-                    //提交表单
-                    console.log('addData')
-                    memberApi.add(this.pojo).then(response => {
-                        const resp = response.data
-                        if(resp.flag) {
-                            //新增成功，刷新列表数据
-                            this.fetchData()
-                            this.dialogFormVisible = false // 关闭窗口
-                        }else {
-                            // 失败，来点提示信息
-                            this.$message({
-                                message: resp.message,
-                                type: 'warning'
-                            })
-                        }
-                    })
-                }else {
-                    return false
-                }
-            })
-        },
-        // 弹出新增窗口
-        handleAdd() {
-            console.log(this.pojo)
-            // this.pojo = {}
-            this.dialogFormVisible = true
-            this.$nextTick(() => { 
-                // this.$nextTick()它是一个异步事件，当渲染结束 之后 ，它的回调函数才会被执行
-                // 弹出窗口打开之后 ，需要加载Dom, 就需要花费一点时间，我们就应该等待它加载完dom之后，再进行调用resetFields方法，重置表单和清除样式
-                this.$refs['pojoForm'].resetFields()
-            })
-            
-        },
-        
-        // 打开编辑窗口
-        handleEdit(id) {
-            console.log('编辑', id)
-           this.handleAdd()
-            memberApi.getById(id).then(response => {
-                const resp = response.data
-                if(resp.flag) {
-                    this.pojo = resp.data
-                    console.log(this.pojo)
-                }
-            })
-        },
 
-        updateData(formName) {
-            console.log('updateData')
-            this.$refs[formName].validate(valid => {
-                if(valid){
-                    // 提交更新
-                    memberApi.update(this.pojo).then(response => {
-                        const resp = response.data
-                        if(resp.flag) {
-                            // 刷新列表
-                            this.fetchData()
-                            this.dialogFormVisible = false
-                        }else {
-                            this.$message({
-                                message: resp.message,
-                                type: 'warning'
-                            })
-                        }
-                    })
 
-                }else {
-                    return false
-                }
-            })
-        },
-        // 删除会员
+        // 删除订单
         handleDelete(id) {
             console.log('删除', id)
+            const that = this;
             this.$confirm('确认删除这条记录吗？', '提示', {
                 confirmButtonText: '确认',
                 cancelButtonText: '取消',
             }).then(() => {
                 // 确认
                 console.log('确认')
-                memberApi.deleteById(id).then(response => {
-                    // console.log(response)
-                    const resp = response.data
-
+                this.$http.delete('/order/'+id).then(()=>{
+                    that.fetchData()
                     this.$message({
-                        message: resp.message,
-                        type: resp.flag ? 'success': 'error'
+                        message: '删除成功',
+                        type: 'success'
                     })
-
-                    if(resp.flag) {
-                        // 删除成功，刷新列表数据
-                        this.fetchData()
-                    }
+                }).catch(()=>{
+                    this.$message({
+                        message: '删除失败',
+                        type: 'warning'
+                    })
                 })
             }).catch(() => {
                 // 取消，不用理会
@@ -295,15 +173,5 @@ export default {
         },
     },
 
-    filters: {
-        payTypeFilter (type) {
-            /* payTypeOptions.find(obj => {
-                return obj.type === type
-            }) */
-            // 在过滤 器当中不能引用当前实例 this   this.payTypeOptions 错误的
-            const payObj = payTypeOptions.find(obj => obj.type === type)
-            return payObj ? payObj.name : null
-        }
-    }
 }
 </script>
