@@ -169,6 +169,9 @@ export default {
             this.fetchData();
         },
         fetchData() {
+            //判断cookie是否存在
+            const token = this.$cookie.get("Huangniuniu_TOKEN");
+            if(token) {
             const that = this;
             this.$http.get("/cinema/skedule/conditionlsitpage", {
                 params: {
@@ -186,6 +189,10 @@ export default {
                 that.list = [];
                 that.total = 0;
             })
+            }else{
+                //跳转登录页
+                this.$router.push('/login/')
+            }
         },
 
         //重置
@@ -208,6 +215,9 @@ export default {
         },
 
         updateData(formName) {
+            //判断cookie是否存在
+            const token = this.$cookie.get("Huangniuniu_TOKEN");
+            if(token) {
             const that = this;
             this.$refs[formName].validate(valid => {
                 if (valid) {
@@ -235,9 +245,16 @@ export default {
                     return false
                 }
             })
+            }else{
+                //跳转登录页
+                this.$router.push('/login/')
+            }
         },
         // 删除排场
         handleDelete(id) {
+            //判断cookie是否存在
+            const token = this.$cookie.get("Huangniuniu_TOKEN");
+            if(token) {
             const that = this;
             this.$confirm('确认删除这条记录吗？', '提示', {
                 confirmButtonText: '确认',
@@ -260,6 +277,10 @@ export default {
                 // 取消，不用理会
                 console.log('取消')
             })
+            }else{
+                //跳转登录页
+                this.$router.push('/login/')
+            }
         }
     },
 }

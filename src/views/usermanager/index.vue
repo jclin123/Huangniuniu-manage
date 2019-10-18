@@ -26,7 +26,7 @@
          -->
          <el-table
             :data="list"
-            height="380"
+            height="500"
             border
             style="width: 100%">
             <!-- type="index"获取索引值，从1开始 ，label显示标题，prop 数据字段名，width列宽 -->
@@ -157,6 +157,9 @@ export default {
 
         //条件查询用户信息
         conditionquery(){
+            //判断cookie是否存在
+            const token = this.$cookie.get("Huangniuniu_TOKEN");
+            if(token) {
             const that = this;
             this.$http.get("/user/conditionQuery",{
                 params: {
@@ -172,6 +175,10 @@ export default {
                 that.list = [];
                 that.total = 0;
             })
+            }else{
+                //跳转登录页
+                this.$router.push('/login/')
+            }
         },
         
         //重置
@@ -183,7 +190,9 @@ export default {
 
         // 冻结/解封账号
         setUnable(id,isDisable) {
-            console.log(id);
+            //判断cookie是否存在
+            const token = this.$cookie.get("Huangniuniu_TOKEN");
+            if(token) {
             const that = this;
             this.$confirm(isDisable == 1 ? '确认冻结这个账号吗？':'确认解封这个账号吗？', '提示', {
                 confirmButtonText: '确认',
@@ -192,7 +201,7 @@ export default {
                 // 确认
                 this.$http.put('/user/isDisable/'+id)
                     .then(()=>{
-                        that.fetchData()
+                        that.conditionquery()
                         this.$message({
                             message: isDisable == 1 ? '冻结成功':'解封成功',
                             type:  'success'
@@ -207,6 +216,10 @@ export default {
                 // 取消，不用理会
                 console.log('取消')
             })
+            }else{
+                //跳转登录页
+                this.$router.push('/login/')
+            }
 
         },
     },

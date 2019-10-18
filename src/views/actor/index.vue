@@ -132,6 +132,8 @@ export default {
   },
 
   methods: {
+
+
     successfun(response, file, fileList){
         //this.actor.actorPicture = response;
       //console.log(file)
@@ -173,8 +175,8 @@ export default {
     // 当每页显示条数改变后,被触发 , val是最新的每页显示条数
     handleSizeChange(val) {
       // console.log(val)
-      this.rows = val;
       this.conditionquery();
+
     },
     // 当页码改变后,被触发 , val 是最新的页面
     handleCurrentChange(val) {
@@ -183,44 +185,54 @@ export default {
       this.conditionquery();
     },
     fetchData() {
-      // 调用分页查询数据
-      const that = this;
-      this.$http.get("/movie/getActorByCondition",{
-        params: {
-          rows: this.rows,
-          page: this.page
-        }
-      }).then(({data})=>{
-        that.list = data.items;
-        that.total = data.total;
-      }).catch(()=>{
-        that.list = [];
-        that.total = 0;
-      })
+        // 调用分页查询数据
+        const that = this;
+        that.$http.get("/movie/getActorByCondition",{
+          params: {
+            rows: this.rows,
+            page: this.page
+          }
+        }).then(({data})=>{
+          that.list = data.items;
+          that.total = data.total;
+        }).catch(()=>{
+          that.list = [];
+          that.total = 0;
+        })
+
     },
 
     //点击查询
     clickquery(){
       this.page = 1;//初始化从第一页开始
       this.conditionquery();
+
     },
 
     //条件查询用户信息
     conditionquery(){
-      const that = this;
-      this.$http.get("/movie/getActorByCondition",{
-        params: {
-          actorName: this.searchMap.actorName,
-          rows: this.rows,
-          page: this.page
-        }
-      }).then(({data})=>{
-        that.list = data.items;
-        that.total = data.total;
-      }).catch(()=>{
-        that.list = [];
-        that.total = 0;
-      })
+      //判断cookie是否存在
+      const token = this.$cookie.get("Huangniuniu_TOKEN");
+      if(token) {
+        const that = this;
+        that.$http.get("/movie/getActorByCondition",{
+          params: {
+            actorName: this.searchMap.actorName,
+            rows: this.rows,
+            page: this.page
+          }
+        }).then(({data})=>{
+          that.list = data.items;
+          that.total = data.total;
+        }).catch(()=>{
+          that.list = [];
+          that.total = 0;
+        })
+    }else {
+      //跳转登录页
+      this.$router.push('/login/')
+    }
+
     },
 
     //重置
@@ -231,35 +243,42 @@ export default {
     },
     // 提交新增数据
     addData(formName) {
-      const that = this;
-      this.$refs[formName].validate(valid => {
-        if (valid) {
-          //封装图片路径
-          this.actor.actorPicture = this.fileList[0].url;
-          //提交表单
-          this.$http({
-            method:  'post',
-            url: '/movie/insertActor',
-            data:this.$qs.stringify(this.actor)
-          }).then(({data})=>{
-            //新增成功，刷新列表数据
-            that.fetchData()
-            //that.add_dialogFormVisible = false // 关闭窗口
-            that.dialogFormVisible = false
-            that.$message({
-              message: '添加成功',
-              type: 'success'
+      //判断cookie是否存在
+      const token = this.$cookie.get("Huangniuniu_TOKEN");
+      if(token) {
+        const that = this;
+        this.$refs[formName].validate(valid => {
+          if (valid) {
+            //封装图片路径
+            this.actor.actorPicture = this.fileList[0].url;
+            //提交表单
+            this.$http({
+              method: 'post',
+              url: '/movie/insertActor',
+              data: this.$qs.stringify(this.actor)
+            }).then(({data}) => {
+              //新增成功，刷新列表数据
+              that.conditionquery();
+              //that.add_dialogFormVisible = false // 关闭窗口
+              that.dialogFormVisible = false
+              that.$message({
+                message: '添加成功',
+                type: 'success'
+              })
+            }).catch(() => {
+              that.$message({
+                message: '添加失败',
+                type: 'warning'
+              })
             })
-          }).catch(()=>{
-            that.$message({
-              message: '添加失败',
-              type: 'warning'
-            })
-          })
-        } else {
-          return false;
-        }
-      });
+          } else {
+            return false;
+          }
+        })
+      }else {
+        //跳转登录页
+        this.$router.push('/login/')
+      }
     },
     // 弹出新增窗口
     handleAdd() {
@@ -283,58 +302,73 @@ export default {
     },
 
     updateData(formName) {
-      const that = this;
-      this.$refs[formName].validate(valid => {
-        if (valid) {
-          //封装图片路径
-          this.actor.actorPicture = this.fileList[0].url;
-          this.$http({
-            method:  'put',
-            url: '/movie/updateActor',
-            data:this.$qs.stringify(this.actor)
-          }).then(({data})=>{
-            //新增成功，刷新列表数据
-            that.fetchData()
-            that.dialogFormVisible = false // 关闭窗口
-            that.$message({
-              message: '修改成功',
-              type: 'success'
+      //判断cookie是否存在
+      const token = this.$cookie.get("Huangniuniu_TOKEN");
+      if(token) {
+        const that = this;
+        this.$refs[formName].validate(valid => {
+          if (valid) {
+            //封装图片路径
+            this.actor.actorPicture = this.fileList[0].url;
+            this.$http({
+              method: 'put',
+              url: '/movie/updateActor',
+              data: this.$qs.stringify(this.actor)
+            }).then(({data}) => {
+              //新增成功，刷新列表数据
+              that.conditionquery();
+              that.dialogFormVisible = false // 关闭窗口
+              that.$message({
+                message: '修改成功',
+                type: 'success'
+              })
+            }).catch(() => {
+              that.$message({
+                message: '修改失败',
+                type: 'warning'
+              })
             })
-          }).catch(()=>{
-            that.$message({
-              message: '修改失败',
-              type: 'warning'
-            })
-          })
-        } else {
-          return false;
-        }
-      });
+          } else {
+            return false;
+          }
+        });
+      }else {
+        //跳转登录页
+        this.$router.push('/login/')
+      }
     },
     // 删除演员
     handleDelete(id) {
-      const that = this;
-      this.$confirm('确认删除这条记录吗？', '提示', {
-        confirmButtonText: '确认',
-        cancelButtonText: '取消',
-      }).then(() => {
-        this.$http.delete('/movie/deleteActor/'+id)
-                .then(()=>{
-                  that.fetchData()
-                  this.$message({
-                    message: '删除成功',
-                    type:  'success'
-                  })
-                }).catch(()=>{
-          this.$message({
-            message: '删除失败',
-            type:  'error'
+      //判断cookie是否存在
+      const token = this.$cookie.get("Huangniuniu_TOKEN");
+      if(token) {
+        const that = this;
+        this.$confirm('确认删除这条记录吗？', '提示', {
+          confirmButtonText: '确认',
+          cancelButtonText: '取消',
+        }).then(() => {
+          this.$http.delete('/movie/deleteActor/' + id)
+                  .then(() => {
+                    that.conditionquery()
+                    this.$message({
+                      message: '删除成功',
+                      type: 'success'
+                    })
+                  }).catch(() => {
+            this.$message({
+              message: '删除失败',
+              type: 'error'
+            })
           })
+        }).catch(() => {
+          // 取消，不用理会
+          console.log('取消')
         })
-      }).catch(() => {
-        // 取消，不用理会
-        console.log('取消')
-      })
+
+      }else{
+        //跳转登录页
+        this.$router.push('/login/')
+      }
     }
   },
 

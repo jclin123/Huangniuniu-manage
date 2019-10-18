@@ -346,6 +346,9 @@ export default {
 
         //条件查询用户信息
         conditionquery(){
+            //判断cookie是否存在
+            const token = this.$cookie.get("Huangniuniu_TOKEN");
+            if(token) {
             const that = this;
             this.$http.get("/cinema/listConditionPage",{
                 params: {
@@ -361,6 +364,10 @@ export default {
                 that.list = [];
                 that.total = 0;
             })
+            }else {
+                //跳转登录页
+                this.$router.push('/login/')
+            }
         },
         
         //重置
@@ -371,6 +378,9 @@ export default {
         },
         // 提交新增数据
         addData(formName) {
+            //判断cookie是否存在
+            const token = this.$cookie.get("Huangniuniu_TOKEN");
+            if(token) {
             const that = this;
             this.$refs[formName].validate(valid => {
                 if(valid){
@@ -384,7 +394,7 @@ export default {
                         data:this.$qs.stringify(this.cinema)
                     }).then(({data})=>{
                         //新增成功，刷新列表数据
-                        that.fetchData()
+                        that.conditionquery()
                         that.cinema = {}
                         that.CityName=''
                         //that.add_dialogFormVisible = false // 关闭窗口
@@ -403,6 +413,10 @@ export default {
                     return false
                 }
             })
+            }else {
+                //跳转登录页
+                this.$router.push('/login/')
+            }
         },
         // 弹出新增窗口
         handleAdd(dfs) {
@@ -467,6 +481,8 @@ export default {
         },
 
         updateData(formName) {
+            const token = this.$cookie.get("Huangniuniu_TOKEN");
+            if(token) {
             const that = this;
             //console.log('updateData')
             this.$refs[formName].validate(valid => {
@@ -479,7 +495,7 @@ export default {
                         data:this.$qs.stringify(this.cinema)
                     }).then(({data})=>{
                         //新增成功，刷新列表数据
-                        that.fetchData()
+                        that.conditionquery();
                         that.edit_dialogFormVisible = false // 关闭窗口
                         that.$message({
                             message: '修改成功',
@@ -496,9 +512,16 @@ export default {
                     return false
                 }
             })
+            }else {
+                //跳转登录页
+                this.$router.push('/login/')
+            }
         },
         // 删除电影院
         handleDelete(id) {
+            //判断cookie是否存在
+            const token = this.$cookie.get("Huangniuniu_TOKEN");
+            if(token) {
             const that = this;
             this.$confirm('确认删除这条记录吗？', '提示', {
                 confirmButtonText: '确认',
@@ -506,7 +529,7 @@ export default {
             }).then(() => {
                 this.$http.delete('/cinema/'+id)
                     .then(()=>{
-                        that.fetchData()
+                        that.conditionquery()
                         this.$message({
                             message: '删除成功',
                             type:  'success'
@@ -521,6 +544,10 @@ export default {
                 // 取消，不用理会
                 console.log('取消')
             })
+        }else {
+            //跳转登录页
+            this.$router.push('/login/')
+        }
         },
     },
 

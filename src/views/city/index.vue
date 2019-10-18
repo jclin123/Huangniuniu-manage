@@ -30,7 +30,7 @@
          -->
         <el-table
                 :data="list"
-                height="380"
+                height="500"
                 border
                 style="width: 100%;text-align:center">
             <!-- type="index"获取索引值，从1开始 ，label显示标题，prop 数据字段名，width列宽 -->
@@ -90,13 +90,6 @@
 
 <script>
 
-    // 支付类型
-    const payTypeOptions = [
-        {type: '1', name: '城市名'},
-        {type: '2', name: '城市首字母'},
-        // {type: '3', name: '身份类型'},
-        // {type: '4', name: '注册时间'},
-    ]
 
     export default {
 
@@ -111,7 +104,6 @@
                     preLetter: ""
                 },
 
-                payTypeOptions, // payTypeOptions: payTypeOptions
 
                 dialogFormVisible: false, //控制对话框
 
@@ -174,6 +166,9 @@
             },
             //按条件查询所有城市并分页
             conditionquery(){
+                //判断cookie是否存在
+                const token = this.$cookie.get("Huangniuniu_TOKEN");
+                if(token) {
                 const that = this;
                 this.$http.get("/city/conditionlisttopage",{
                     params: {
@@ -189,6 +184,10 @@
                     that.list = [];
                     that.total = 0;
                 })
+                }else {
+                    //跳转登录页
+                    this.$router.push('/login/')
+                }
             },
             //重置
             resetForm(formName) {
@@ -198,6 +197,9 @@
             },
             // 提交新增数据
             addData(formName) {
+                //判断cookie是否存在
+                const token = this.$cookie.get("Huangniuniu_TOKEN");
+                if(token) {
                 const that = this;
                 this.$refs[formName].validate(valid => {
                     if(valid){
@@ -208,7 +210,7 @@
                             url: '/city',
                             data: this.$qs.stringify(this.city)
                         }).then(({data})=>{
-                            that.fetchData()
+                            that.conditionquery()
                             that.city = {}
                             that.dialogFormVisible = false
                             that.$message({
@@ -225,6 +227,10 @@
                         return false
                     }
                 })
+                }else {
+                    //跳转登录页
+                    this.$router.push('/login/')
+                }
             },
             // 弹出新增窗口
             handleAdd(dfs) {
@@ -252,7 +258,9 @@
             },
 
             updateData(formName) {
-                console.log('updateData')
+                //判断cookie是否存在
+                const token = this.$cookie.get("Huangniuniu_TOKEN");
+                if(token) {
                 const that = this;
                 this.$refs[formName].validate(valid => {
                     if(valid){
@@ -261,7 +269,7 @@
                             url: '/city',
                             data: this.$qs.stringify(this.city)
                         }).then(({data})=>{
-                            that.fetchData()
+                            that.conditionquery()
                             that.dialogFormVisible = false
                             that.$message({
                                 message: '修改成功',
@@ -277,10 +285,17 @@
                         return false
                     }
                 })
+                }else {
+                    //跳转登录页
+                    this.$router.push('/login/')
+                }
             },
-            // 删除会员
+
+            // 删除城市
             handleDelete(id) {
-                console.log('删除', id)
+                //判断cookie是否存在
+                const token = this.$cookie.get("Huangniuniu_TOKEN");
+                if(token) {
                 const that = this;
                 this.$confirm('确认删除这条记录吗？', '提示', {
                     confirmButtonText: '确认',
@@ -289,7 +304,7 @@
                     // 确认
                     console.log('确认')
                     this.$http.delete('/city/'+id).then(()=>{
-                        that.fetchData()
+                        that.conditionquery()
                         this.$message({
                             message: '删除成功',
                             type: 'success'
@@ -304,18 +319,13 @@
                     // 取消，不用理会
                     console.log('取消')
                 })
+            }else{
+                //跳转登录页
+                this.$router.push('/login/')
+            }
             },
         },
 
-        filters: {
-            payTypeFilter (type) {
-                /* payTypeOptions.find(obj => {
-                    return obj.type === type
-                }) */
-                // 在过滤 器当中不能引用当前实例 this   this.payTypeOptions 错误的
-                const payObj = payTypeOptions.find(obj => obj.type === type)
-                return payObj ? payObj.name : null
-            }
-        }
+
     }
 </script>

@@ -25,16 +25,17 @@
     <el-table :data="list" height="500" border style="width: 100%;text-align:center">
       <!-- type="index"获取索引值，从1开始 ，label显示标题，prop 数据字段名，width列宽 -->
       <el-table-column type="index" label="序号" width="60"></el-table-column>
-      <el-table-column prop="movieName" label="电影名称"></el-table-column>
-      <el-table-column prop="movieType" label="类型" width="130"></el-table-column>
-      <el-table-column prop="location" label="影片产地"></el-table-column>
+      <el-table-column prop="movieName" label="电影名称" width="250"></el-table-column>
+      <el-table-column prop="movieType" label="类型" width="150"></el-table-column>
+      <el-table-column prop="location" label="影片产地" width="150"></el-table-column>
       <el-table-column prop="score" label="评分" width="70"></el-table-column>
-      <el-table-column prop="releaseTime" label="上映时间" :formatter="dateFormat"></el-table-column>
+      <el-table-column prop="releaseTime" label="上映时间" :formatter="dateFormat" width="130"></el-table-column>
 
-      <el-table-column label="操作" width="350">
+      <el-table-column label="操作" width="450">
         <template slot-scope="scope">
           <el-button size="mini" @click="cnmviedeos(scope.row.id,scope.row.movieName)">影片演员</el-button>
           <el-button type="primary" size="mini" @click="handleAddmovieactor(scope.row.id,scope.row.movieName)">添加演员</el-button>
+          <el-button size="mini" type="primary" @click="handleedit(scope.row)">编辑</el-button>
           <el-button type="primary" @click="handledetail(scope.row)" size="mini" >详情</el-button>
           <el-button size="mini" type="danger" @click="handleDelete(scope.row.id)">删除</el-button>
         </template>
@@ -55,7 +56,7 @@
         title 窗口的标题
         :visible.sync 当它true的时候，窗口会被弹出
     -->
-    <el-dialog title="电影" :visible.sync="dialogFormVisible" width="700px">
+    <el-dialog :title="dailogTitleType" :visible.sync="dialogFormVisible" width="700px">
       <el-form
         :rules="rules"
         ref="movieForm"
@@ -173,37 +174,39 @@
         <!-- <el-button type="primary" @click="addData('pojoForm')">确 定</el-button> -->
         <el-button
           type="primary"
-          @click="addmovie('movieForm')"
+          @click="movie.id == null ? addmovie('movieForm') : editmovie('movieForm')"
         >确 定</el-button>
       </div>
     </el-dialog>
 
     <!--电影详情-->
-    <el-dialog title="电影" :visible.sync="dialogdetail" width="700px">
+    <el-dialog title="电影详情" :visible.sync="dialogdetail" width="700px">
       <el-form
               ref="movieForm"
               label-width="150px"
               label-position="right"
               style="width: 550px;"
+              action=""
               :model="movie"
       >
     <el-form-item label="电影名称" prop="movieName">
-      <el-input v-model="movie.movieName" readonly="true"></el-input>
+      <el-input v-model="movie.movieName" :readonly="true"></el-input>
     </el-form-item>
     <el-form-item label="电影类型" prop="movieType">
-      <el-input v-model="movie.movieType" readonly="true"></el-input>
+      <el-input v-model="movie.movieType" :readonly="true"></el-input>
     </el-form-item>
     <el-form-item label="影片产地" prop="location">
-      <el-input v-model="movie.location" readonly="true"></el-input>
+      <el-input v-model="movie.location" :readonly="true"></el-input>
     </el-form-item>
     <el-form-item label="电影简介" prop="discription">
-      <el-input type="textarea" :rows="6" v-model="movie.discription" readonly="true"></el-input>
+      <el-input type="textarea" :rows="6" v-model="movie.discription" :readonly="true"></el-input>
     </el-form-item>
     <el-form-item label="电影海报" prop="file">
       <el-upload
               class="upload-demo"
               :limit="1"
               :file-list="fileList1"
+              action=""
               ref="nowUpload"
               list-type="picture"
               :disabled="true"
@@ -211,10 +214,10 @@
       </el-upload>
     </el-form-item>
     <el-form-item label="电影时长(单位:分钟)" prop="runningTime">
-      <el-input v-model="movie.runningTime" readonly="true"></el-input>
+      <el-input v-model="movie.runningTime" :readonly="true"></el-input>
     </el-form-item>
     <el-form-item label="上映时间" prop="releaseTime">
-      <el-input v-model="movie.releaseTime" readonly="true"></el-input>
+      <el-input v-model="movie.releaseTime" :readonly="true"></el-input>
     </el-form-item>
     <el-form-item label="剧照" prop="file">
       <!-- <el-input v-model="pojo.name"></el-input> -->
@@ -223,6 +226,7 @@
               :file-list="fileList2"
               ref="nowUpload"
               list-type="picture"
+              action=""
               :disabled="true"
       >
       </el-upload>
@@ -234,7 +238,7 @@
     </el-form-item>
 
         <el-form-item label="下架时间" prop="releaseTime">
-          <el-input v-model="movie.soldOutTime" readonly="true"></el-input>
+          <el-input v-model="movie.soldOutTime" :readonly="true"></el-input>
         </el-form-item>
     </el-form>
     <div slot="footer" class="dialog-footer">
@@ -308,6 +312,7 @@ export default {
         movieType: "",
         location: ""
       },
+      dailogTitleType: '',//动态显示电影弹框标题
       options: [],//存储电影搜索得到的后台数据
       loading: false,//是否开启远程搜索
 
@@ -357,7 +362,7 @@ export default {
           {min: 2, max: 200, message: '长度在 2 到 200 个字符'}
         ],
         runningTime: [
-          {required: true, message: '请正确填写电影播放时长', trigger: 'blur',type: 'number'}
+          {required: true, message: '请正确填写电影播放时长', trigger: 'blur'}
         ]
 
       },
@@ -370,7 +375,6 @@ export default {
   },
 
   methods: {
-
     //电影详情
     handledetail(row){
       this.movie = {};
@@ -378,9 +382,11 @@ export default {
       this.fileList1 =[];
       this.fileList2 = [];
       this.fileList1.push({"url" : this.movie.moviePicture});
-      const files = this.movie.stagePhotos.split(",");
-      for(let i=0;i<files.length;i++){
-        this.fileList2.push({"url" : files[i]});
+      if(this.movie.stagePhotos) {
+        const files = this.movie.stagePhotos.split(",");
+        for (let i = 0; i < files.length; i++) {
+          this.fileList2.push({"url": files[i]});
+        }
       }
       //this.fileList2.push() = this.movie.stagePhotos;
       this.dialogdetail = true;
@@ -557,6 +563,9 @@ export default {
 
     //条件查询用户信息
     conditionquery(){
+      //判断cookie是否存在
+      const token = this.$cookie.get("Huangniuniu_TOKEN");
+      if(token) {
       const that = this;
       this.$http.get("/movie/getMovieByCondition",{
         params: {
@@ -573,6 +582,10 @@ export default {
         that.list = [];
         that.total = 0;
       })
+      }else{
+        //跳转登录页
+        this.$router.push('/login/')
+      }
     },
 
     //重置
@@ -584,7 +597,9 @@ export default {
 
     // 弹出新增电影窗口
     handleAdd() {
-      this.movie = {}
+      this.movie = {};
+      this.fileList1 = [];
+      this.fileList2 = [];
       this.dialogFormVisible = true;
 
       this.videoFlag=false;
@@ -603,6 +618,9 @@ export default {
     },
     //添加演员
     addmovieActor(formName){
+      //判断cookie是否存在
+      const token = this.$cookie.get("Huangniuniu_TOKEN");
+      if(token) {
       const that = this;
       this.$refs[formName].validate(valid => {
         if(valid){
@@ -627,10 +645,39 @@ export default {
           return false
         }
       })
+      }else{
+        //跳转登录页
+        this.$router.push('/login/')
+      }
+    },
+
+    //弹出编辑电影框
+    handleedit(row){
+      this.movie = {};
+      this.fileList1 = [];
+      this.fileList2 = [];
+      this.movie = row;
+      //给图片回显
+      this.fileList1.push({"url" : this.movie.moviePicture});
+      if(this.movie.stagePhotos) {
+        const files = this.movie.stagePhotos.split(",");
+        for (let i = 0; i < files.length; i++) {
+          this.fileList2.push({"uid": files[i],"url": files[i]});
+        }
+      }
+
+      this.dialogFormVisible = true;
+
+      this.videoFlag = false;
+      this.videoUploadPercent = 0;
+      this.isShowUploadVideo=true;
     },
 
     //添加电影
     addmovie(formName){
+      //判断cookie是否存在
+      const token = this.$cookie.get("Huangniuniu_TOKEN");
+      if(token) {
       const that = this;
       this.$refs[formName].validate(valid => {
         if(valid){
@@ -652,14 +699,15 @@ export default {
             url: '/movie/insert',
             data:this.$qs.stringify(this.movie)
           }).then(({data})=>{
+            that.conditionquery()
             that.dialogFormVisible = false // 关闭窗口
             that.$message({
-              message: '添加演员成功',
+              message: '添加电影成功',
               type: 'success'
             })
           }).catch(()=>{
             that.$message({
-              message: '添加演员失败',
+              message: '添加电影失败',
               type: 'warning'
             })
           })
@@ -668,12 +716,68 @@ export default {
           return false
         }
       })
+      }else{
+        //跳转登录页
+        this.$router.push('/login/')
+      }
+    },
+
+    //编辑电影
+    editmovie(formName){
+      //判断cookie是否存在
+      const token = this.$cookie.get("Huangniuniu_TOKEN");
+      if(token) {
+        const that = this;
+        this.$refs[formName].validate(valid => {
+          if(valid){
+            this.movie.moviePicture = ''
+            this.movie.stagePhotos = ''
+            //封装图片地址
+            this.movie.moviePicture = this.fileList1[0].url;//电影海报
+            for(let i = 0,flag=0; i<this.fileList2.length; i++){
+              ++flag;
+              if(this.fileList2.length != flag){
+                this.movie.stagePhotos = this.movie.stagePhotos + this.fileList2[i].url + ",";
+              }else{
+                this.movie.stagePhotos = this.movie.stagePhotos + this.fileList2[i].url;
+              }
+            }
+           // console.log(this.movie.stagePhotos)
+            this.$http({
+              method:  'put',
+              url: '/movie/update',
+              data:this.$qs.stringify(this.movie)
+            }).then(({data})=>{
+              that.conditionquery()
+              that.dialogFormVisible = false // 关闭窗口
+              that.$message({
+                message: '修改电影成功',
+                type: 'success'
+              })
+            }).catch(()=>{
+              that.$message({
+                message: '修改电影失败',
+                type: 'warning'
+              })
+            })
+
+          }else {
+            return false
+          }
+        })
+      }else{
+        //跳转登录页
+        this.$router.push('/login/')
+      }
     },
 
 
 
     // 删除电影
     handleDelete(id) {
+      //判断cookie是否存在
+      const token = this.$cookie.get("Huangniuniu_TOKEN");
+      if(token) {
       const that = this
       this.$confirm("确认删除这条记录吗？", "提示", {
         confirmButtonText: "确认",
@@ -683,7 +787,7 @@ export default {
           // 确认
           this.$http.delete('/movie/delete/'+id)
                   .then(()=>{
-                    that.fetchData()
+                    that.conditionquery()
                     this.$message({
                       message: '删除成功',
                       type:  'success'
@@ -698,7 +802,11 @@ export default {
         .catch(() => {
           // 取消，不用理会
           console.log("取消");
-        });
+        })
+      }else{
+        //跳转登录页
+        this.$router.push('/login/')
+      }
     }
   },
 

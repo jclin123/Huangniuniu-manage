@@ -23,7 +23,7 @@
          -->
         <el-table
                 :data="list"
-                height="380"
+                height="500"
                 border
                 style="width: 100%;text-align:center">
             <!-- type="index"获取索引值，从1开始 ，label显示标题，prop 数据字段名，width列宽 -->
@@ -74,19 +74,19 @@
                     style="width: 400px;"
                     :model="comment">
                 <el-form-item label="电影名" prop="movieName" >
-                    <el-input v-model="comment.movieName" :disabled="true"></el-input>
+                    <el-input v-model="comment.movieName" :readonly="true"></el-input>
                 </el-form-item>
                 <el-form-item label="用户昵称" prop="nickname" >
-                    <el-input v-model="comment.nickname" :disabled="true"></el-input>
+                    <el-input v-model="comment.nickname" :readonly="true"></el-input>
                 </el-form-item>
                 <el-form-item label="评分" prop="score" >
-                    <el-input v-model="comment.score" :disabled="true"></el-input>
+                    <el-input v-model="comment.score" :readonly="true"></el-input>
                 </el-form-item>
                 <el-form-item label="评论时间" prop="commentTime" >
-                    <el-input v-model="comment.commentTime" :disabled="true"></el-input>
+                    <el-input v-model="comment.commentTime" :readonly="true"></el-input>
                 </el-form-item>
                 <el-form-item label="评论内容" prop="commentWords">
-                    <el-input type="textarea" v-model="comment.commentWords" :disabled="true"></el-input>
+                    <el-input type="textarea" v-model="comment.commentWords" :readonly="true"></el-input>
                 </el-form-item>
 
             </el-form>
@@ -174,6 +174,9 @@
               this.conditionquery();
             },
             conditionquery(){
+                //判断cookie是否存在
+                const token = this.$cookie.get("Huangniuniu_TOKEN");
+                if(token) {
                 const that = this;
                 this.$http.get("/comment/Commentstopage",{
                     params:{
@@ -188,7 +191,12 @@
                     that.list = [];
                     that.total = 0;
                 })
+                }else{
+                    //跳转登录页
+                    this.$router.push('/login/')
+                }
             },
+
             //重置
             resetForm(formName) {
                 console.log('重置', formName)
@@ -209,9 +217,11 @@
                 })
                 this.dialogFormVisible = true
             },
-            // 删除会员
+            // 删除评论
             handleDelete(id) {
-                console.log('删除', id)
+                //判断cookie是否存在
+                const token = this.$cookie.get("Huangniuniu_TOKEN");
+                if(token) {
                 const that = this;
                 this.$confirm('确认删除这条记录吗？', '提示', {
                     confirmButtonText: '确认',
@@ -235,6 +245,10 @@
                     // 取消，不用理会
                     console.log('取消')
                 })
+                }else{
+                    //跳转登录页
+                    this.$router.push('/login/')
+                }
             },
         },
 

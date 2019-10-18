@@ -28,9 +28,9 @@
             style="width: 100%;text-align:center">
             <!-- type="index"获取索引值，从1开始 ，label显示标题，prop 数据字段名，width列宽 -->
             <el-table-column type="index" label="序号" width="60"></el-table-column>
-             <el-table-column prop="id" label="订单号"></el-table-column>
-            <el-table-column prop="orderNum" label="购票数"></el-table-column>
-            <el-table-column prop="orderTime" label="下单时间" :formatter="timeFormat"></el-table-column>
+             <el-table-column prop="id" label="订单号" width="180"></el-table-column>
+            <el-table-column prop="orderNum" label="购票数" width="60"></el-table-column>
+            <el-table-column prop="orderTime" label="下单时间" :formatter="timeFormat" width="150"></el-table-column>
             <el-table-column prop="nickname" label="昵称" ></el-table-column>
              <el-table-column prop="roomName" label="影厅名"></el-table-column>
              <el-table-column prop="showDate" label="上映时间" :formatter="dateFormat"></el-table-column>
@@ -117,6 +117,9 @@ export default {
             this.fetchData();
         },
         fetchData() {
+            //判断cookie是否存在
+            const token = this.$cookie.get("Huangniuniu_TOKEN");
+            if(token) {
             const that = this;
             this.$http.get("/order/getOrderMessageByCondition", {
                 params: {
@@ -134,6 +137,10 @@ export default {
                 that.list = [];
                 that.total = 0;
             })
+            }else{
+                //跳转登录页
+                this.$router.push('/login/')
+            }
         },
         
         //重置
@@ -146,7 +153,9 @@ export default {
 
         // 删除订单
         handleDelete(id) {
-            console.log('删除', id)
+            //判断cookie是否存在
+            const token = this.$cookie.get("Huangniuniu_TOKEN");
+            if(token) {
             const that = this;
             this.$confirm('确认删除这条记录吗？', '提示', {
                 confirmButtonText: '确认',
@@ -170,6 +179,10 @@ export default {
                 // 取消，不用理会
                 console.log('取消')
             })
+            }else{
+                //跳转登录页
+                this.$router.push('/login/')
+            }
         },
     },
 

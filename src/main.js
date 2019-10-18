@@ -9,6 +9,7 @@ import config from './config';
 import './http'
 import qs from 'qs'
 import store from './state'
+import cookie from 'vue-cookie'
 
 
 //Vue.prototype.$cookie = cookie;  //配置时候prototype.$这里的名字自己定义不是固定是cookie
@@ -19,6 +20,7 @@ Vue.use(ElementUI);
 Vue.prototype.$qs = qs;
 //Vue.prototype.$store = store;
 Vue.prototype.$bus = new Vue();
+Vue.prototype.$cookie = cookie;
 
 // 权限拦截
 import './permission'

@@ -10,7 +10,7 @@
         :data 绑定渲染的数据
         border 表格边框
     -->
-    <el-table :data="list" height="380" border style="width: 100%;text-align:center">
+    <el-table :data="list" height="500" border style="width: 100%;text-align:center">
       <!-- type="index"获取索引值，从1开始 ，label显示标题，prop 数据字段名，width列宽 -->
       <el-table-column type="index" label="序号"></el-table-column>
       <el-table-column prop="movieName" label="电影名称" width="400"></el-table-column>
@@ -113,10 +113,10 @@ export default {
           {min: 2, max: 20, message: '长度在 2 到 10 个字符'}
         ],
         price: [
-          {required: true, message: '价格必须正确填写', trigger: 'blur',type: 'number'}
+          {required: true, message: '价格必须正确填写', trigger: 'blur'}
         ],
         ticketsLeft: [
-          {required: true, message: '电影票数必须正确填写', trigger: 'blur',type: 'number'}
+          {required: true, message: '电影票数必须正确填写', trigger: 'blur'}
         ],
       }
     };
@@ -161,6 +161,9 @@ export default {
       this.fetchData();
     },
     fetchData() {
+      //判断cookie是否存在
+      const token = this.$cookie.get("Huangniuniu_TOKEN");
+      if(token) {
       const that = this;
       this.$http.get("/cinema/cinemaMoviePage/"+that.skedule.cinemaid,{
         params: {
@@ -175,10 +178,17 @@ export default {
         that.list = [];
         that.total = 0;
       })
+      }else{
+        //跳转登录页
+        this.$router.push('/login/')
+      }
     },
 
     // 提交新增数据
     addData(formName) {
+      //判断cookie是否存在
+      const token = this.$cookie.get("Huangniuniu_TOKEN");
+      if(token) {
       const that = this;
       this.$refs[formName].validate(valid => {
         if (valid) {
@@ -209,7 +219,11 @@ export default {
         } else {
           return false;
         }
-      });
+      })
+      }else{
+        //跳转登录页
+        this.$router.push('/login/')
+      }
     },
     // 弹出新增窗口
     handleAdd(movieid,movieName) {
@@ -228,7 +242,9 @@ export default {
 
     // 删除电影
     handleDelete(id) {
-
+      //判断cookie是否存在
+      const token = this.$cookie.get("Huangniuniu_TOKEN");
+      if(token) {
       const that = this;
       this.$confirm("确认删除这条记录吗？", "提示", {
         confirmButtonText: "确认",
@@ -253,7 +269,11 @@ export default {
         .catch(() => {
           // 取消，不用理会
           console.log("取消");
-        });
+        })
+      }else{
+        //跳转登录页
+        this.$router.push('/login/')
+      }
     }
   },
 
