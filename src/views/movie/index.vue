@@ -408,7 +408,7 @@ export default {
       const typeArr = ["image/png", "image/jpeg", "image/jpg"];
       const isJPG = typeArr.indexOf(file.raw.type) !== -1;//-1时候代表false
       // image/png, image/jpeg, image/gif, image/jpg
-      const isLt10M = file.size / 1024 / 1024 < 10;//图片必须少于10M
+      const isLt10M = file.size / 1024 / 1024 < 20;//图片必须少于10M
 
       if (!isJPG) {
         this.$message.error("只能是图片!");
@@ -429,13 +429,13 @@ export default {
 
     //视频设置
     beforeUploadVideo(file) {
-      const isLt10M = file.size / 1024 / 1024  < 10;
+      const isLt10M = file.size / 1024 / 1024  < 20;
       if (['video/mp4', 'video/ogg', 'video/flv','video/avi','video/wmv','video/rmvb'].indexOf(file.type) == -1) {
         this.$message.error('请上传正确的视频格式');
         return false;
       }
       if (!isLt10M) {
-        this.$message.error('上传视频大小不能超过10MB哦!');
+        this.$message.error('上传视频大小不能超过20MB哦!');
         return false;
       }
     },
