@@ -68,14 +68,24 @@
                     <el-input v-model="cinema.cinemaName" ></el-input>
                 </el-form-item>
                 <el-form-item label="所在城市" prop="cityid" >
-                    <el-select v-model="cinema.cityid" ref="selectCity"
-                               @change="select_handler_city" @click.native="clearCityNameShow()" filterable placeholder="请选择">{{CityNameShow}}
-                        <!-- 不要忘记 CityOptions 绑定到data中 -->
-                        <el-option v-for="option in CityOptions"
-                                   :key="option.id"
-                                   :label="option.cityName"
-                                   :value="option.id"
-                        ></el-option>
+                    <el-select
+                            v-model="CityName"
+                            @change="select_handler_city2"
+                            ref="selectCity"
+                            value-key="id"
+                            filterable
+                            no-data-text="该城市不存在,请重输！"
+                            remote
+                            reserve-keyword
+                            placeholder="请输入关键词"
+                            :remote-method="remoteMethodCity"
+                            :loading="loading">
+                        <el-option
+                                v-for="item in cityoptions"
+                                :key="item.id"
+                                :label="item.cityName"
+                                :value="item.id">
+                        </el-option>
                     </el-select>
                 </el-form-item>
                 <el-form-item label="详细地址(从区/县开始)" prop="cinemaAddress">
@@ -141,6 +151,7 @@ export default {
     
     data() {
         return {
+            cityoptions: [],//存储城市
             list: [],
             total: 0, // 总记录数
             pageNumber: 1, // 当前页码
@@ -233,6 +244,31 @@ export default {
             }
         },
 
+        //输入城市名称时搜索城市
+        remoteMethodCity(query) {//remote会被自动调用
+
+            this.cityoptions = []
+            console.log(query)
+            if (query !== "") {//query为当前输入
+                //是否正在从远程获取数据searchvalue
+                this.loading = true;
+                //此处更换为远程搜索结果数据，将远程结果赋值到options
+                const that = this;
+                this.$http.get("/city/conditionlisttopage",{
+                    params: {
+                        cityName: query
+                    }
+                }).then(({data})=>{
+                    that.cityoptions = data.items;
+                    that.loading = false;
+                    //console.log(that.options)
+                }).catch(()=>{
+                    console.log("查询报错了")
+                    that.loading = false;
+                })
+            }
+        },
+
 
         //添加电影的弹框
         handleAddMovie(dfs,cinemaid,cinemaName) {
@@ -256,6 +292,15 @@ export default {
                 //console.log('searchvalue'+this.searchvalue)
             });
         },
+        //获取下拉的城市名称
+        select_handler_city2() {
+            Vue.nextTick(() => {
+                this.cinema.cityid = this.$refs.selectCity.selected.value;
+                this.CityName = this.$refs.selectCity.selected.label;
+                //console.log('searchvalue'+this.searchvalue)
+            });
+        },
+
         //添加电影
         addMovie(formName){
             const that = this;
@@ -428,13 +473,13 @@ export default {
             that.CityNameShow=''
             if(dfs==='edit_dialogFormVisible'){
                 this.dailogTitleType = '添加电影院'
-                this.edit_dialogFormVisible = true,
-                //并且加载城市数据
+                this.edit_dialogFormVisible = true
+                /*//并且加载城市数据
                 this.$http.get("/city/list").then(({data})=>{
                     that.CityOptions = data
                 }).catch(()=>{
 
-                })
+                })*/
             }
             
         },
@@ -448,10 +493,10 @@ export default {
             that.CityNameShow=''
 
             this.dailogTitleType = '修改电影院'
-              //并且加载城市数据
+             /* //并且加载城市数据
              this.$http.get("/city/list").then(({data})=>{
                  that.CityOptions = data
-               })
+               })*/
             //查询该电影院信息,传递id，发送请求
             /*this.$http.get("/cinema/id/"+id).then(({data})=>{
                 that.cinema = data
@@ -470,7 +515,7 @@ export default {
             //查询该电影院的城市名称
             this.$http.get("/city/"+that.cinema.cityid).then(({data})=>{
                 that.CityName = data.cityName
-                that.CityNameShow = data.cityName
+                //that.CityNameShow = data.cityName
                 //console.log(that.cinema)
                 //去除掉详细地址的城市名称
                 that.cinema.cinemaAddress = that.cinema.cinemaAddress.replace(that.CityName,'')
