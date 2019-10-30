@@ -68,14 +68,33 @@
                     <el-input v-model="cinema.cinemaName" ></el-input>
                 </el-form-item>
                 <el-form-item label="所在城市" prop="cityid" >
-                    <el-select v-model="cinema.cityid" ref="selectCity"
+                    <!--<el-select v-model="cinema.cityid" ref="selectCity"
                                @change="select_handler_city" @click.native="clearCityNameShow()" filterable placeholder="请选择">{{CityNameShow}}
-                        <!-- 不要忘记 CityOptions 绑定到data中 -->
+                        &lt;!&ndash; 不要忘记 CityOptions 绑定到data中 &ndash;&gt;
                         <el-option v-for="option in CityOptions"
                                    :key="option.id"
                                    :label="option.cityName"
                                    :value="option.id"
                         ></el-option>
+                    </el-select>-->
+                    <el-select
+                            v-model="cinema.cityid"
+                            @change="select_handler_city"
+                            ref="selectCity"
+                            value-key="id"
+                            filterable
+                            no-data-text="该城市不存在,请重输！"
+                            remote
+                            reserve-keyword
+                            placeholder="请输入关键词"
+                            :remote-method="remoteMethodCity"
+                            :loading="loading">
+                        <el-option
+                                v-for="item in Cityoptions"
+                                :key="item.id"
+                                :label="item.cityName"
+                                :value="item.id">
+                        </el-option>
                     </el-select>
                 </el-form-item>
                 <el-form-item label="详细地址(从区/县开始)" prop="cinemaAddress">
@@ -141,6 +160,7 @@ export default {
     
     data() {
         return {
+            Cityoptions: [],//搜索城市
             list: [],
             total: 0, // 总记录数
             pageNumber: 1, // 当前页码
@@ -162,7 +182,7 @@ export default {
 
             CityName: '',//存储城市名称
             CityNameShow: '',//在修改时做数据回显用
-            CityOptions: [],//城市列表
+            CityOptions: [],//城市列表,没有
 
             dialogFormVisible: false, //控制对话框
             dlogFormVsb:false,//控制添加电影弹窗
@@ -189,7 +209,7 @@ export default {
                 ],
                 cinemaAddress: [
                     {required: true, message: '详细地址不能为空', trigger: 'blur'},
-                    {min: 2, max: 20, message: '长度在 2 到 100 个字符'}
+                    {min: 2, max: 100, message: '长度在 2 到 100 个字符'}
                 ]
             },
             rulesMovie: {//校验电影规则
@@ -233,6 +253,31 @@ export default {
             }
         },
 
+        //输入城市名称时搜索城市
+        remoteMethodCity(query) {//remote会被自动调用
+
+            this.Cityoptions = []
+            //console.log(query)
+            if (query !== "") {//query为当前输入
+                //是否正在从远程获取数据searchvalue
+                this.loading = true;
+                //此处更换为远程搜索结果数据，将远程结果赋值到options
+                const that = this;
+                this.$http.get("/city/conditionlisttopage",{
+                    params: {
+                        cityName: query
+                    }
+                }).then(({data})=>{
+                    that.Cityoptions = data.items;
+                    that.loading = false;
+                    //console.log(that.options)
+                }).catch(()=>{
+                    console.log("查询报错了")
+                    that.loading = false;
+                })
+            }
+        },
+
 
         //添加电影的弹框
         handleAddMovie(dfs,cinemaid,cinemaName) {
@@ -246,6 +291,15 @@ export default {
                 this.cinema_movie.cinemaName = cinemaName
             }
 
+        },
+
+        //获取下拉的城市名称
+        select_handler_city() {
+            Vue.nextTick(() => {
+                //this.cinema.cityName = this.$refs.selectCity.selected.label;
+                this.cinema.cityid = this.$refs.selectCity.selected.value;
+                //console.log('searchvalue'+this.searchvalue)
+            });
         },
 
         //获取下拉的电影名称
@@ -428,13 +482,13 @@ export default {
             that.CityNameShow=''
             if(dfs==='edit_dialogFormVisible'){
                 this.dailogTitleType = '添加电影院'
-                this.edit_dialogFormVisible = true,
+                this.edit_dialogFormVisible = true
                 //并且加载城市数据
-                this.$http.get("/city/list").then(({data})=>{
+                /*this.$http.get("/city/list").then(({data})=>{
                     that.CityOptions = data
                 }).catch(()=>{
 
-                })
+                })*/
             }
             
         },
