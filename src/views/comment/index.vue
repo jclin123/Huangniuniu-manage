@@ -138,8 +138,16 @@
         methods: {
             //时间格式化
             dateFormat(row){
-                let t=new Date(row.commentTime);//row 表示一行数据, updateTime 表示要格式化的字段名称
-                return t.getFullYear()+"-"+(t.getMonth()+1)+"-"+t.getDate()+" "+t.getHours()+":"+t.getMinutes();
+                let date = new Date(row.commentTime)
+                let year = date.getFullYear();
+                let month= date.getMonth()+1<10 ? "0"+(date.getMonth()+1) : date.getMonth()+1;
+                let day=date.getDate()<10 ? "0"+date.getDate() : date.getDate();
+                let hours=date.getHours()<10 ? "0"+date.getHours() : date.getHours();
+                let minutes=date.getMinutes()<10 ? "0"+date.getMinutes() : date.getMinutes();
+                //let second =date.getSeconds() < 10 ? "0" + date.getSeconds() : date.getSeconds();
+                // 拼接
+                return year+"-"+month+"-"+day+" "+hours+":"+minutes;
+
             },
 
             // 当每页显示条数改变后,被触发 , val是最新的每页显示条数
