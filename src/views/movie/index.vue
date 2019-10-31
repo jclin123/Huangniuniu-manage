@@ -22,7 +22,7 @@
         :data 绑定渲染的数据
         border 表格边框
     -->
-    <el-table :data="list" height="500" border style="width: 100%;text-align:center">
+    <el-table :data="list" height="500px" border style="width: 100%;text-align:center">
       <!-- type="index"获取索引值，从1开始 ，label显示标题，prop 数据字段名，width列宽 -->
       <el-table-column type="index" label="序号" width="60"></el-table-column>
       <el-table-column prop="movieName" label="电影名称" width="250"></el-table-column>
@@ -77,7 +77,7 @@
         <el-form-item label="电影简介" prop="discription">
           <el-input type="textarea" :rows="6" v-model="movie.discription"></el-input>
         </el-form-item>
-        <el-form-item label="电影海报" prop="file">
+        <el-form-item label="电影图片" prop="file">
           <el-upload
                   class="upload-demo"
                   action="http://api.huangniuniu.com/api/upload/image"
@@ -87,6 +87,23 @@
                   :on-change="fileChange"
                   :on-success="successfun1"
                   :file-list="fileList1"
+                  ref="nowUpload"
+                  list-type="picture"
+          >
+            <el-button size="small" type="primary">点击上传</el-button>
+            <div slot="tip" class="el-upload__tip">只能上传jpg/png文件，且不超过10M</div>
+          </el-upload>
+        </el-form-item>
+        <el-form-item label="电影海报" prop="file">
+          <el-upload
+                  class="upload-demo"
+                  action="http://api.huangniuniu.com/api/upload/image"
+                  :limit="1"
+                  :on-preview="handlePreview"
+                  :on-remove="handleRemove3"
+                  :on-change="fileChange"
+                  :on-success="successfun3"
+                  :file-list="fileList3"
                   ref="nowUpload"
                   list-type="picture"
           >
@@ -155,7 +172,7 @@
                        v-if="!isShowUploadVideo"
                        type="primary">选取文件</el-button>
           </el-upload>
-          <P class="text">请保证视频格式正确，且不超过10M</P>
+          <P class="text">请保证视频格式正确，且不超过20M</P>
         </el-form-item>
 
         <el-form-item label="下架时间" prop="soldOutTime">
@@ -201,7 +218,7 @@
     <el-form-item label="电影简介" prop="discription">
       <el-input type="textarea" :rows="6" v-model="movie.discription" :readonly="true"></el-input>
     </el-form-item>
-    <el-form-item label="电影海报" prop="file">
+    <el-form-item label="电影图片" prop="file">
       <el-upload
               class="upload-demo"
               :limit="1"
@@ -213,6 +230,18 @@
       >
       </el-upload>
     </el-form-item>
+        <el-form-item label="电影海报" prop="file">
+          <el-upload
+                  class="upload-demo"
+                  :limit="1"
+                  :file-list="fileList3"
+                  action=""
+                  ref="nowUpload"
+                  list-type="picture"
+                  :disabled="true"
+          >
+          </el-upload>
+        </el-form-item>
     <el-form-item label="电影时长(单位:分钟)" prop="runningTime">
       <el-input v-model="movie.runningTime" :readonly="true"></el-input>
     </el-form-item>
@@ -301,6 +330,7 @@ export default {
     return {
       dialogdetail: false,//电影详情弹框
       fileList1: [],//电影海报，取第一个
+      fileList3: [],//轮播图，取第一个
       fileList2: [],//电影剧照，多个图片
       list: [],
       total: 0, // 总记录数
@@ -330,6 +360,7 @@ export default {
         stagePhotos: "",//剧照
         prevideo: '',//电影预览视频
         score: '',//评分
+        poster: '',//轮播图
         soldOutTime: '' //下架时间
 
       }, // 提交的数据
@@ -378,10 +409,16 @@ export default {
     //电影详情
     handledetail(row){
       this.movie = {};
-      this.movie = row;
       this.fileList1 =[];
       this.fileList2 = [];
-      this.fileList1.push({"url" : this.movie.moviePicture});
+      this.fileList3 = [];
+      this.movie = row;
+      if(this.movie.moviePicture){
+        this.fileList1.push({"url" : this.movie.moviePicture});
+      }
+      if(this.movie.poster){
+        this.fileList3.push({"url" : this.movie.poster});
+      }
       if(this.movie.stagePhotos) {
         const files = this.movie.stagePhotos.split(",");
         for (let i = 0; i < files.length; i++) {
@@ -392,9 +429,13 @@ export default {
       this.dialogdetail = true;
     },
 
-    //图片上传成功，海报
+    //图片上传成功，电影图片
     successfun1(response, file, fileList){
       this.fileList1.push({'url':file.response});
+    },
+    //图片上传成功，海报
+    successfun3(response, file, fileList){
+      this.fileList3.push({'url':file.response});
     },
     //剧照
     successfun2(response, file, fileList){
@@ -408,7 +449,7 @@ export default {
       const typeArr = ["image/png", "image/jpeg", "image/jpg"];
       const isJPG = typeArr.indexOf(file.raw.type) !== -1;//-1时候代表false
       // image/png, image/jpeg, image/gif, image/jpg
-      const isLt10M = file.size / 1024 / 1024 < 30;//图片必须少于10M
+      const isLt10M = file.size / 1024 / 1024 < 10;//图片必须少于10M
 
       if (!isJPG) {
         this.$message.error("只能是图片!");
@@ -429,7 +470,7 @@ export default {
 
     //视频设置
     beforeUploadVideo(file) {
-      const isLt10M = file.size / 1024 / 1024  < 30;
+      const isLt10M = file.size / 1024 / 1024  < 20;
       if (['video/mp4', 'video/ogg', 'video/flv','video/avi','video/wmv','video/rmvb'].indexOf(file.type) == -1) {
         this.$message.error('请上传正确的视频格式');
         return false;
@@ -465,10 +506,15 @@ export default {
     handlePreview(){
 
     },
-    //删除海报
+    //删除电影图片
     handleRemove1(file, fileList){
       //this.actor.actorPicture = '';
       this.fileList1 = []
+    },
+    //删除海报
+    handleRemove3(file, fileList){
+      //this.actor.actorPicture = '';
+      this.fileList3 = []
     },
     //删除剧照
     handleRemove2(file, fileList){
@@ -480,8 +526,18 @@ export default {
 
     //时间格式化
     dateFormat(row){
-      let t=new Date(row.releaseTime);//row 表示一行数据, updateTime 表示要格式化的字段名称
-      return t.getFullYear()+"-"+(t.getMonth()+1)+"-"+t.getDate();
+      let date = new Date(row.releaseTime)
+      let year = date.getFullYear();
+      let month= date.getMonth()+1<10 ? "0"+(date.getMonth()+1) : date.getMonth()+1;
+      let day=date.getDate()<10 ? "0"+date.getDate() : date.getDate();
+      //let hours=date.getHours()<10 ? "0"+date.getHours() : date.getHours();
+      //let minutes=date.getMinutes()<10 ? "0"+date.getMinutes() : date.getMinutes();
+      //let second =date.getSeconds() < 10 ? "0" + date.getSeconds() : date.getSeconds();
+      // 拼接
+      return year+"-"+month+"-"+day;
+
+      /*let t=new Date(row.releaseTime);//row 表示一行数据, updateTime 表示要格式化的字段名称
+      return t.getFullYear()+"-"+(t.getMonth()+1)+"-"+t.getDate();*/
     },
 
     //输入电影名称时搜索电影
@@ -597,9 +653,11 @@ export default {
 
     // 弹出新增电影窗口
     handleAdd() {
+      console.log("添加电影")
       this.movie = {};
       this.fileList1 = [];
       this.fileList2 = [];
+      this.fileList3 = [];
       this.dialogFormVisible = true;
 
       this.videoFlag=false;
@@ -653,13 +711,21 @@ export default {
 
     //弹出编辑电影框
     handleedit(row){
+      console.log("编辑电影")
       this.movie = {};
-      this.movie.prevideo ='';
       this.fileList1 = [];
       this.fileList2 = [];
+      this.fileList3 = [];
       this.movie = row;
+      console.log("mpic"+this.movie.moviePicture)
+      //console.log("file1"+JSON.stringify(this.fileList1))
       //给图片回显
-      this.fileList1.push({"url" : this.movie.moviePicture});
+      if(this.movie.moviePicture != ""){
+        this.fileList1.push({"url" : this.movie.moviePicture});
+      }
+      if(this.movie.poster){
+        this.fileList3.push({"url" : this.movie.poster});
+      }
       if(this.movie.stagePhotos) {
         const files = this.movie.stagePhotos.split(",");
         for (let i = 0; i < files.length; i++) {
@@ -683,9 +749,15 @@ export default {
       this.$refs[formName].validate(valid => {
         if(valid){
           this.movie.moviePicture = ''
+          this.movie.poster = ''
           this.movie.stagePhotos = ''
           //封装图片地址
-          this.movie.moviePicture = this.fileList1[0].url;//电影海报
+          if(this.fileList1.length == 1){
+            this.movie.moviePicture = this.fileList1[0].url;//电影图片
+          }
+          if(this.fileList3.length == 1){
+            this.movie.poster = this.fileList3[0].url;//电影海报
+          }
           for(let i = 0,flag=0; i<this.fileList2.length; i++){
             ++flag;
             if(this.fileList2.length != flag){
@@ -733,8 +805,14 @@ export default {
           if(valid){
             this.movie.moviePicture = ''
             this.movie.stagePhotos = ''
+            this.movie.poster = ''
             //封装图片地址
-            this.movie.moviePicture = this.fileList1[0].url;//电影海报
+            if(this.fileList1.length == 1){
+              this.movie.moviePicture = this.fileList1[0].url;//电影图片
+            }
+            if(this.fileList3.length == 1){
+              this.movie.poster = this.fileList3[0].url;//电影海报
+            }
             for(let i = 0,flag=0; i<this.fileList2.length; i++){
               ++flag;
               if(this.fileList2.length != flag){
@@ -743,12 +821,13 @@ export default {
                 this.movie.stagePhotos = this.movie.stagePhotos + this.fileList2[i].url;
               }
             }
-           // console.log(this.movie.stagePhotos)
+            //console.log(this.movie.stagePhotos)
             this.$http({
               method:  'put',
               url: '/movie/update',
               data:this.$qs.stringify(this.movie)
             }).then(({data})=>{
+              //console.log("file1"+JSON.stringify(that.fileList1))
               that.conditionquery()
               that.dialogFormVisible = false // 关闭窗口
               that.$message({

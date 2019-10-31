@@ -33,7 +33,7 @@
             <el-table-column prop="orderTime" label="下单时间" :formatter="timeFormat" width="150"></el-table-column>
             <el-table-column prop="nickname" label="昵称" ></el-table-column>
              <el-table-column prop="roomName" label="影厅名"></el-table-column>
-             <el-table-column prop="showDate" label="上映时间" :formatter="dateFormat"></el-table-column>
+             <!--<el-table-column prop="showDate" label="上映时间" :formatter="dateFormat"></el-table-column>-->
              <el-table-column prop="cinemaName" label="影院名称"></el-table-column>
              <el-table-column prop="movieName" label="电影名称"></el-table-column>
              <el-table-column prop="totalPrice" label="总价" ></el-table-column>
@@ -92,12 +92,28 @@ export default {
     methods: {
         //时间格式化
         timeFormat(row){
-            let t=new Date(row.orderTime);//row 表示一行数据, updateTime 表示要格式化的字段名称
-            return t.getFullYear()+"-"+(t.getMonth()+1)+"-"+t.getDate()+" "+t.getHours()+":"+t.getMinutes();
+            let date = new Date(row.orderTime)
+            let year = date.getFullYear();
+            let month= date.getMonth()+1<10 ? "0"+(date.getMonth()+1) : date.getMonth()+1;
+            let day=date.getDate()<10 ? "0"+date.getDate() : date.getDate();
+            let hours=date.getHours()<10 ? "0"+date.getHours() : date.getHours();
+            let minutes=date.getMinutes()<10 ? "0"+date.getMinutes() : date.getMinutes();
+            //let second =date.getSeconds() < 10 ? "0" + date.getSeconds() : date.getSeconds();
+            // 拼接
+            return year+"-"+month+"-"+day+" "+hours+":"+minutes;
+
         },
         dateFormat(row){
-            let t=new Date(row.showDate);//row 表示一行数据, updateTime 表示要格式化的字段名称
-            return t.getFullYear()+"-"+(t.getMonth()+1)+"-"+t.getDate();
+            let date = new Date(row.showDate)
+            let year = date.getFullYear();
+            let month= date.getMonth()+1<10 ? "0"+(date.getMonth()+1) : date.getMonth()+1;
+            let day=date.getDate()<10 ? "0"+date.getDate() : date.getDate();
+            let hours=date.getHours()<10 ? "0"+date.getHours() : date.getHours();
+            let minutes=date.getMinutes()<10 ? "0"+date.getMinutes() : date.getMinutes();
+            //let second =date.getSeconds() < 10 ? "0" + date.getSeconds() : date.getSeconds();
+            // 拼接
+            return year+"-"+month+"-"+day;
+
         },
         // 当每页显示条数改变后,被触发 , val是最新的每页显示条数
         handleSizeChange(val) {
