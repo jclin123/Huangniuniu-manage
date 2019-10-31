@@ -409,11 +409,10 @@ export default {
     //电影详情
     handledetail(row){
       this.movie = {};
-      this.movie.prevideo = ''
-      this.movie = row;
       this.fileList1 =[];
       this.fileList2 = [];
       this.fileList3 = [];
+      this.movie = row;
       if(this.movie.moviePicture){
         this.fileList1.push({"url" : this.movie.moviePicture});
       }
@@ -654,6 +653,7 @@ export default {
 
     // 弹出新增电影窗口
     handleAdd() {
+      console.log("添加电影")
       this.movie = {};
       this.fileList1 = [];
       this.fileList2 = [];
@@ -711,14 +711,21 @@ export default {
 
     //弹出编辑电影框
     handleedit(row){
+      console.log("编辑电影")
       this.movie = {};
       this.fileList1 = [];
       this.fileList2 = [];
       this.fileList3 = [];
       this.movie = row;
+      console.log("mpic"+this.movie.moviePicture)
+      //console.log("file1"+JSON.stringify(this.fileList1))
       //给图片回显
-      this.fileList1.push({"url" : this.movie.moviePicture});
-      this.fileList3.push({"url" : this.movie.poster});
+      if(this.movie.moviePicture != ""){
+        this.fileList1.push({"url" : this.movie.moviePicture});
+      }
+      if(this.movie.poster){
+        this.fileList3.push({"url" : this.movie.poster});
+      }
       if(this.movie.stagePhotos) {
         const files = this.movie.stagePhotos.split(",");
         for (let i = 0; i < files.length; i++) {
@@ -814,12 +821,13 @@ export default {
                 this.movie.stagePhotos = this.movie.stagePhotos + this.fileList2[i].url;
               }
             }
-           // console.log(this.movie.stagePhotos)
+            //console.log(this.movie.stagePhotos)
             this.$http({
               method:  'put',
               url: '/movie/update',
               data:this.$qs.stringify(this.movie)
             }).then(({data})=>{
+              //console.log("file1"+JSON.stringify(that.fileList1))
               that.conditionquery()
               that.dialogFormVisible = false // 关闭窗口
               that.$message({
